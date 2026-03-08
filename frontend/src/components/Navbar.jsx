@@ -37,7 +37,7 @@ const Navbar = () => {
                         src='https://res.cloudinary.com/mern288/image/upload/v1772400983/logoAzul-removebg-preview-removebg-preview_b6xrf7.png'
                         alt="Logo Santa Cruz"
                     />
-                    <span className="sm:hidden text-xl md:text-2xl font-bold tracking-tight text-base-content group-hover:text-primary transition-colors">
+                    <span className="max-sm:hidden text-xl md:text-2xl font-bold tracking-tight text-base-content group-hover:text-primary transition-colors">
                         Organiza<span className="text-primary">Estudos</span>
                     </span>
                 </Link>
