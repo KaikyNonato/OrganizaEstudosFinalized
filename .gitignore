@@ -1,0 +1,23 @@
+.env
+**/__pycache__/
+
+# Dependências do Node.js
+node_modules/
+
+# Builds de produção (Frontend)
+dist/
+build/
+
+# Logs e arquivos de debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Arquivos de sistema operacional
+.DS_Store
+Thumbs.db
+
+# Configurações de IDE (opcional)
+.vscode/
+.idea/

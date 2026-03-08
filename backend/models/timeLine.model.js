@@ -1,0 +1,31 @@
+import mongoose from "mongoose";
+
+const timeLineSchema = new mongoose.Schema({
+    user_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true
+    },
+    matter_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Matter",
+        required: true
+    },
+    day: {
+        type: String,
+        required: true,
+        enum: ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"]
+    },
+    startTime: {
+        type: String,
+        required: true
+    },
+    endTime: {
+        type: String,
+        required: true
+    }
+}, { timestamps: true })
+
+const TimeLine = mongoose.model("TimeLine", timeLineSchema);
+
+export default TimeLine;
