@@ -38,7 +38,7 @@ const Countdown = ({ targetDate, textSize = "text-sm" }) => {
             } else if (diff > 24 * 60 * 60 * 1000) {
                 setIsLate(false);
                 const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                setTimeLeft(`${days + 1} dia${days > 1 ? 's' : ''}`);
+                setTimeLeft(`${days + 1} dia${days >= 1 ? 's' : ''}`);
             } else {
                 setIsLate(false);
                 const hours = Math.floor(diff / (1000 * 60 * 60));
