@@ -5,9 +5,9 @@ import { API_URL } from '../../API_URL'
 export const useMatterStore = create((set, get) => ({
     matters: [],
     subjectsByMatter: {}, 
-    allSubjects: [], // <-- NOVO: Guarda todos os assuntos
+    allSubjects: [],
     hasFetchedMatters: false,
-    hasFetchedAllSubjects: false, // <-- NOVO: Controla o cache de todos os assuntos
+    hasFetchedAllSubjects: false,
 
     fetchMatters: async (force = false) => {
         if (!force && get().hasFetchedMatters) return; 
@@ -15,7 +15,13 @@ export const useMatterStore = create((set, get) => ({
         try {
             const response = await axios.get(`${API_URL}/matter/get-matters`, { withCredentials: true })
             if (response.data.success) {
-                set({ matters: response.data.matters, hasFetchedMatters: true })
+                set({ 
+                    matters: response.data.matters, 
+                    hasFetchedMatters: true,
+                    // Se forçou a atualização das matérias (ex: apagou uma matéria), 
+                    // invalida o cache global de assuntos também
+                    ...(force ? { hasFetchedAllSubjects: false } : {})
+                })
             }
         } catch (error) {
             console.error("Erro ao buscar matérias:", error)
@@ -24,7 +30,7 @@ export const useMatterStore = create((set, get) => ({
 
     fetchSubjects: async (matterId, force = false) => {
         const currentSubjects = get().subjectsByMatter[matterId];
-        if (!force && currentSubjects) return;
+        if (!force && currentSubjects) return; 
 
         try {
             const response = await axios.get(`${API_URL}/subject/get-subjects/${matterId}`, { withCredentials: true })
@@ -33,7 +39,11 @@ export const useMatterStore = create((set, get) => ({
                     subjectsByMatter: {
                         ...state.subjectsByMatter,
                         [matterId]: response.data.subjects.sort((a, b) => (a.order || 0) - (b.order || 0))
-                    }
+                    },
+                    // A MÁGICA ACONTECE AQUI: 
+                    // Se forçamos a busca (force = true) porque mudamos o status para CONCLUÍDO,
+                    // dizemos ao Zustand que a lista global 'allSubjects' está desatualizada.
+                    ...(force ? { hasFetchedAllSubjects: false } : {})
                 }))
             }
         } catch (error) {
@@ -41,7 +51,6 @@ export const useMatterStore = create((set, get) => ({
         }
     },
 
-    // <-- NOVA FUNÇÃO: Busca todos os assuntos para a página de Revisões e Dashboard
     fetchAllSubjects: async (force = false) => {
         if (!force && get().hasFetchedAllSubjects) return;
 
