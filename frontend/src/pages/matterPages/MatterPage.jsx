@@ -2,18 +2,18 @@ import React, { useEffect, useState } from 'react'
 import { Plus, Trash, Paperclip, PencilLine, ArrowUp, ArrowDown, FileText, CircleCheck, CircleX } from 'lucide-react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
-import { motion } from 'framer-motion' // <-- 1. Importação adicionada
+import { motion } from 'framer-motion'
 import { API_URL } from '../../../API_URL'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
-
-
-
-
+import { useMatterStore } from '../../store/matterStore' // <-- Importação do Zustand
 
 // Componente isolado para gerenciar cada matéria e seus assuntos
-const MatterItem = ({ matter, onUpdate }) => {
-    const [subjects, setSubjects] = useState([])
+const MatterItem = ({ matter }) => {
+    // Puxa do Zustand em vez de useState local
+    const { subjectsByMatter, fetchSubjects, fetchMatters } = useMatterStore()
+    const subjects = subjectsByMatter[matter._id] || [] // Pega só os assuntos desta matéria
+
     const [subjectTitle, setSubjectTitle] = useState('')
     const [editingSubject, setEditingSubject] = useState(null)
     const [editTitle, setEditTitle] = useState('')
@@ -28,6 +28,10 @@ const MatterItem = ({ matter, onUpdate }) => {
         { hex: '#c27aff', className: 'bg-purple-400' }
     ]
 
+    useEffect(() => {
+        // Tenta buscar no cache (false)
+        fetchSubjects(matter._id, false)
+    }, [matter._id, fetchSubjects])
 
     const handleFileUpload = async (e, subjectId) => {
         const file = e.target.files[0];
@@ -49,11 +53,12 @@ const MatterItem = ({ matter, onUpdate }) => {
         
         try {
             const response = await axios.post(API_URL+`/subject/${subjectId}/upload`, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
+                headers: { 'Content-Type': 'multipart/form-data' },
+                withCredentials: true
             });
             if (response.data.success) {
                 toast.success("Arquivo anexado!", { id: toastId });
-                fetchSubjects();
+                fetchSubjects(matter._id, true); // Força atualização na API
             }
         } catch (error) {
             toast.error(error.response?.data?.message || "Erro ao anexar arquivo", { id: toastId });
@@ -62,32 +67,19 @@ const MatterItem = ({ matter, onUpdate }) => {
         e.target.value = ''; // Reseta o input de arquivo
     }
 
-    // Nova função para deletar arquivo
     const handleDeleteFile = async (subjectId, publicId) => {
         const toastId = toast.loading("Removendo arquivo...");
 
         try {
             const response = await axios.put(API_URL+`/subject/remove-file/${subjectId}`, {
                 public_id: publicId
-            });
+            }, { withCredentials: true });
             if (response.data.success) {
                 toast.success("Arquivo removido!", { id: toastId });
-                fetchSubjects();
+                fetchSubjects(matter._id, true); // Força atualização na API
             }
         } catch (error) {
             toast.error("Erro ao remover arquivo", { id: toastId });
-        }
-    }
-
-    const fetchSubjects = async () => {
-        try {
-            const response = await axios.get(API_URL+`/subject/get-subjects/${matter._id}`)
-            if (response.data.success) {
-                // Ordena os assuntos pelo campo 'order' (se existir) ou mantém a ordem atual
-                setSubjects(response.data.subjects.sort((a, b) => (a.order || 0) - (b.order || 0)))
-            }
-        } catch (error) {
-            console.error("Erro ao buscar assuntos:", error)
         }
     }
 
@@ -97,15 +89,14 @@ const MatterItem = ({ matter, onUpdate }) => {
         const toastId = toast.loading("Criando assunto...")
 
         try {
-            // Usa matter_id conforme esperado pelo seu controller
             const response = await axios.post(API_URL+"/subject/create-subject", {
                 title: subjectTitle,
                 matter_id: matter._id
-            })
+            }, { withCredentials: true })
             if (response.data.success) {
                 toast.success("Assunto criado com sucesso!", { id: toastId })
                 setSubjectTitle('')
-                fetchSubjects() // Atualiza a lista de assuntos apenas desta matéria
+                fetchSubjects(matter._id, true) // Força atualização na API
             }
         } catch (error) {
             toast.error(error.response?.data?.message || error.message || "Erro ao criar assunto", { id: toastId })
@@ -126,14 +117,14 @@ const MatterItem = ({ matter, onUpdate }) => {
             const response = await axios.put(API_URL+`/matter/update-matter/${matter._id}`, {
                 title: editTitleMatter,
                 color: editColorMatter
-            })
+            }, { withCredentials: true })
             if (response.data.success) {
                 toast.success("Matéria atualizada!", { id: toastId })
-                if (onUpdate) onUpdate()
+                fetchMatters(true) // Força atualização das matérias
                 document.getElementById(`edit_matter_modal_${matter._id}`).close()
             }
         } catch (error) {
-            toast.error("Erro ao atualizar matéria")
+            toast.error("Erro ao atualizar matéria", { id: toastId })
         }
     }
 
@@ -141,21 +132,21 @@ const MatterItem = ({ matter, onUpdate }) => {
         const toastId = toast.loading("Deletando assunto...")
 
         try {
-            const response = await axios.delete(API_URL+`/subject/delete-subject/${subjectId}`)
+            const response = await axios.delete(API_URL+`/subject/delete-subject/${subjectId}`, { withCredentials: true })
             if (response.data.success) {
                 toast.success("Assunto deletado com sucesso!", { id: toastId })
-                fetchSubjects()
+                fetchSubjects(matter._id, true) // Força atualização na API
             }
         } catch (error) {
-            toast.error(error.response?.data?.message || "Erro ao deletar assunto")
+            toast.error(error.response?.data?.message || "Erro ao deletar assunto", { id: toastId })
         }
     }
 
     const handleUpdateStatus = async (subjectId, newStatus) => {
         try {
-            const response = await axios.put(API_URL+`/subject/update-subject/${subjectId}`, { status: newStatus })
+            const response = await axios.put(API_URL+`/subject/update-subject/${subjectId}`, { status: newStatus }, { withCredentials: true })
             if (response.data.success) {
-                fetchSubjects()
+                fetchSubjects(matter._id, true) // Força atualização na API
             }
         } catch (error) {
             toast.error("Erro ao atualizar status")
@@ -173,14 +164,14 @@ const MatterItem = ({ matter, onUpdate }) => {
 
         if (!editingSubject || !editTitle.trim()) return
         try {
-            const response = await axios.put(API_URL+`/subject/update-subject/${editingSubject._id}`, { title: editTitle })
+            const response = await axios.put(API_URL+`/subject/update-subject/${editingSubject._id}`, { title: editTitle }, { withCredentials: true })
             if (response.data.success) {
                 toast.success("Assunto atualizado!", { id: toastId })
-                fetchSubjects()
+                fetchSubjects(matter._id, true) // Força atualização na API
                 document.getElementById(`edit_subject_modal_${matter._id}`).close()
             }
         } catch (error) {
-            toast.error("Erro ao atualizar assunto")
+            toast.error("Erro ao atualizar assunto", { id: toastId })
         }
     }
 
@@ -193,39 +184,41 @@ const MatterItem = ({ matter, onUpdate }) => {
         } else {
             return
         }
-        setSubjects(newSubjects)
+
+        // Atualiza a UI imediatamente (optimistic update no Zustand)
+        useMatterStore.setState((state) => ({
+            subjectsByMatter: {
+                ...state.subjectsByMatter,
+                [matter._id]: newSubjects
+            }
+        }))
 
         try {
-            // Prepara os dados para enviar ao backend: [{ _id: "...", order: 0 }, { _id: "...", order: 1 }]
             const updates = newSubjects.map((s, i) => ({ _id: s._id, order: i }))
-            await axios.put(API_URL+"/subject/reorder-subjects", { updates })
+            await axios.put(API_URL+"/subject/reorder-subjects", { updates }, { withCredentials: true })
         } catch (error) {
             console.error("Erro ao salvar ordem:", error)
             toast.error("Erro ao salvar a nova ordem")
-            fetchSubjects() // Reverte para a ordem do banco em caso de erro
+            fetchSubjects(matter._id, true) // Reverte para a ordem do banco em caso de erro
         }
     }
 
     const handleDeleteMatter = async () => {
         const toastId = toast.loading("Deletando matéria...")
         try {
-            const response = await axios.delete(API_URL+`/matter/delete-matter/${matter._id}`)
+            const response = await axios.delete(API_URL+`/matter/delete-matter/${matter._id}`, { withCredentials: true })
             if (response.data.success) {
                 toast.success("Matéria deletada com sucesso!", { id: toastId })
-                if (onUpdate) onUpdate()
+                fetchMatters(true) // Força atualização das matérias na API
             }
         } catch (error) {
             console.error("Erro ao deletar matéria:", error)
-            toast.error(error.response?.data?.message || "Erro ao deletar matéria")
+            toast.error(error.response?.data?.message || "Erro ao deletar matéria", { id: toastId })
         }
     }
 
-    useEffect(() => {
-        fetchSubjects()
-    }, [matter._id])
 
     return (
-        // 2. Trocado <div> por <motion.div> e adicionado as propriedades de animação
         <motion.div 
             initial={{ opacity: 0, y: 15 }} 
             animate={{ opacity: 1, y: 0 }} 
@@ -249,7 +242,6 @@ const MatterItem = ({ matter, onUpdate }) => {
             <div className='flex flex-col gap-5 my-2'>
                 {subjects.length > 0 ? (
                     subjects.map((subject, index) => (
-                        // Adicionado flex-col para os anexos quebrarem a linha
                         <div key={subject._id}>
 
                             <div className='bg-base-200/60 py-1.5 pl-3 pr-1 rounded border-base-content/20 border text-sm flex flex-col gap-2'>
@@ -275,7 +267,6 @@ const MatterItem = ({ matter, onUpdate }) => {
                                             <option value="CONCLUIDO">CONCLUIDO</option>
                                         </select>
 
-                                        {/* INPUT FILE MODIFICADO AQUI */}
                                         <label
                                             className={`cursor-pointer transition-colors ${subject.attachments?.length >= 3 ? 'text-gray-400 opacity-50 cursor-not-allowed' : ''}`}
                                             title={subject.attachments?.length >= 3 ? 'Limite de 3 arquivos atingido' : 'Anexar PDF'}
@@ -379,15 +370,17 @@ const MatterItem = ({ matter, onUpdate }) => {
                     </form>
                 </div>
             </dialog>
-        </motion.div> // <-- Fechamento atualizado
+        </motion.div>
     )
 }
 
 const MatterPage = () => {
     const { isAuthenticated } = useAuthStore()
+    // Puxa as matérias e a função do Zustand
+    const { matters, fetchMatters } = useMatterStore()
+    
     const [title, setTitle] = useState('')
     const [selectedColor, setSelectedColor] = useState('#ff6467')
-    const [matters, setMatters] = useState([])
 
     const colors = [
         { hex: '#ff6467', className: 'bg-red-400' },
@@ -397,36 +390,28 @@ const MatterPage = () => {
         { hex: '#c27aff', className: 'bg-purple-400' }
     ]
 
+    useEffect(() => {
+        if (isAuthenticated) {
+            // Tenta buscar no cache (false), evita loading extra se já tiver dados
+            fetchMatters(false) 
+        }
+    }, [isAuthenticated, fetchMatters])
+
     const handleCreateMatter = async (e) => {
         e.preventDefault()
         try {
-            const response = await axios.post(API_URL+"/matter/create-matter", { title, color: selectedColor })
+            const response = await axios.post(API_URL+"/matter/create-matter", { title, color: selectedColor }, { withCredentials: true })
             if (response.data.success) {
                 toast.success("Matéria criada com sucesso!")
                 setTitle('')
                 setSelectedColor('#ff6467')
                 document.getElementById('create_matter_modal').close()
-                fetchMatters()
+                fetchMatters(true) // Força a busca das matérias após criar uma nova
             }
         } catch (error) {
             toast.error(error.response?.data?.message || error.message || "Erro ao criar matéria")
         }
     }
-
-    const fetchMatters = async () => {
-        if (!isAuthenticated) return;
-        try {
-            const response = await axios.get(API_URL+"/matter/get-matters")
-            setMatters(response.data.matters)
-        } catch (error) {
-            if (error.response && error.response.status === 401) return;
-            toast.error(error.response?.data?.message || error.message || "Erro ao buscar matérias")
-        }
-    }
-
-    useEffect(() => {
-        fetchMatters()
-    }, [isAuthenticated])
 
     return (
         <div className='flex flex-col gap-6'>
@@ -469,7 +454,7 @@ const MatterPage = () => {
             <div>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4 '>
                     {matters.length > 0 ? matters.map((matter) => (
-                        <MatterItem key={matter._id} matter={matter} onUpdate={fetchMatters} />
+                        <MatterItem key={matter._id} matter={matter} />
                     )) : (
                         <div className="col-span-full text-center text-base-content/50 py-10 border border-dashed border-base-content/20 rounded-lg">
                             Nenhuma matéria cadastrada no momento.
