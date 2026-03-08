@@ -4,10 +4,11 @@ import { API_URL } from '../../API_URL'
 
 export const useMatterStore = create((set, get) => ({
     matters: [],
-    subjectsByMatter: {}, // Guarda os assuntos separados por ID da matéria { 'id_materia': [assuntos] }
+    subjectsByMatter: {}, 
+    allSubjects: [], // <-- NOVO: Guarda todos os assuntos
     hasFetchedMatters: false,
+    hasFetchedAllSubjects: false, // <-- NOVO: Controla o cache de todos os assuntos
 
-    // O parâmetro force=true obriga a ir buscar à API. Se for false, usa o cache.
     fetchMatters: async (force = false) => {
         if (!force && get().hasFetchedMatters) return; 
 
@@ -23,7 +24,7 @@ export const useMatterStore = create((set, get) => ({
 
     fetchSubjects: async (matterId, force = false) => {
         const currentSubjects = get().subjectsByMatter[matterId];
-        if (!force && currentSubjects) return; // Se já temos os assuntos em cache, não busca de novo
+        if (!force && currentSubjects) return;
 
         try {
             const response = await axios.get(`${API_URL}/subject/get-subjects/${matterId}`, { withCredentials: true })
@@ -40,5 +41,25 @@ export const useMatterStore = create((set, get) => ({
         }
     },
 
-    clearMatterStore: () => set({ matters: [], subjectsByMatter: {}, hasFetchedMatters: false })
+    // <-- NOVA FUNÇÃO: Busca todos os assuntos para a página de Revisões e Dashboard
+    fetchAllSubjects: async (force = false) => {
+        if (!force && get().hasFetchedAllSubjects) return;
+
+        try {
+            const response = await axios.get(`${API_URL}/subject/get-subjects`, { withCredentials: true })
+            if (response.data.success) {
+                set({ allSubjects: response.data.subjects, hasFetchedAllSubjects: true })
+            }
+        } catch (error) {
+            console.error("Erro ao buscar todos os assuntos:", error)
+        }
+    },
+
+    clearMatterStore: () => set({ 
+        matters: [], 
+        subjectsByMatter: {}, 
+        allSubjects: [], 
+        hasFetchedMatters: false, 
+        hasFetchedAllSubjects: false 
+    })
 }))

@@ -4,12 +4,12 @@ import { Clock, CircleCheck, FileText } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { API_URL } from '../../../API_URL'
 import { useAuthStore } from '../../store/authStore'
+import { useMatterStore } from '../../store/matterStore' // <-- Importando o Zustand
 
 const Countdown = ({ targetDate, textSize = "text-sm" }) => {
     const [timeLeft, setTimeLeft] = useState("");
     const [isLate, setIsLate] = useState(false);
     
-
     useEffect(() => {
         const updateTimer = () => {
             const now = new Date();
@@ -42,8 +42,6 @@ const Countdown = ({ targetDate, textSize = "text-sm" }) => {
             } else {
                 setIsLate(false);
                 const hours = Math.floor(diff / (1000 * 60 * 60));
-                // const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                // const seconds = Math.floor((diff % (1000 * 60)) / 1000);
                 setTimeLeft(`${hours} horas `);
             }
         };
@@ -61,34 +59,26 @@ const Countdown = ({ targetDate, textSize = "text-sm" }) => {
 };
 
 const ReviewsPage = () => {
-    const [subjects, setSubjects] = useState([])
+    // Pegamos allSubjects do Zustand e o renomeamos para subjects para manter o resto do código intacto
+    const { allSubjects: subjects, fetchAllSubjects } = useMatterStore()
     const [selectedSubject, setSelectedSubject] = useState(null)
     const { isAuthenticated } = useAuthStore()
 
-    const fetchSubjects = async () => {
-        if (!isAuthenticated) return;
-        try {
-            const response = await axios.get(API_URL+"/subject/get-subjects")
-            if (response.data.success) {
-                setSubjects(response.data.subjects)
-            }
-        } catch (error) {
-            console.error("Erro ao buscar assuntos:", error)
-        }
-    }
-
     useEffect(() => {
-        fetchSubjects()
-    }, [isAuthenticated])
+        if (isAuthenticated) {
+            // false = Usa o cache se já tiver os dados, evita loading extra
+            fetchAllSubjects(false) 
+        }
+    }, [isAuthenticated, fetchAllSubjects])
 
-    // Função movida para o componente correto e corrigida
     const handleConclude = async (id, review) => {
         try {
-            // Envia 'review' no corpo da requisição, conforme o controller espera
-            const response = await axios.put(API_URL+`/subject/concluded-review/${id}/${review}`)
+            // Nota: enviando body vazio {} pois é um PUT, e a config de credenciais no 3º argumento
+            const response = await axios.put(API_URL+`/subject/concluded-review/${id}/${review}`, {}, { withCredentials: true })
             if (response.data.success) {
                 toast.success("Revisão concluída")
-                fetchSubjects() // Atualiza a lista para remover o item concluído
+                // true = Força a buscar na API novamente para atualizar as revisões concluídas
+                fetchAllSubjects(true) 
             }
         } catch (error) {
             console.error("Erro ao concluir revisão:", error)
@@ -96,7 +86,6 @@ const ReviewsPage = () => {
         }
     }
 
-    // Função auxiliar para verificar se está atrasado no componente pai
     const checkIsLate = (date) => {
         return new Date(date) < new Date();
     }
@@ -110,22 +99,23 @@ const ReviewsPage = () => {
         <div className='flex flex-col gap-6'>
             <p className='font-medium'>◉ Revisões espaçadas de 24h, 7 e 30 dias</p>
             <div className='flex flex-col gap-6'>
+                
+                {/* --- 24 HORAS --- */}
                 <div className='border border-base-content/20 p-6 rounded-lg flex flex-col gap-2 shadow-md'>
                     <div className='font-bold  text-lg flex items-center gap-2'>
                         <Clock size={20}></Clock>
                         24 Horas
                     </div>
-                    {/* Adicionado filtro !subject.review1_concluded para esconder os concluídos */}
                     {subjects.filter(subject => subject.review1 && !subject.review1_concluded).length === 0 ? (
                         <span className='text-sm text-base-content/60'>Nenhuma revisão cadastrada</span>
                     ) : (subjects.filter(subject => subject.review1 && !subject.review1_concluded).sort((a, b) => new Date(a.review1) - new Date(b.review1)).map(subject => (
                         <div className='border border-base-content/20 rounded-lg p-2 flex justify-between items-center gap-2 cursor-pointer hover:bg-base-200/50 hover:shadow-md transition-shadow' key={subject._id} onClick={() => openSubjectModal(subject)}>
                             <div className='flex items-center gap-2 min-w-0'>
-                                <div className={`rounded-full min-w-4 min-h-4 text-white ${subject.matter_id.color === '#ff6467' ? 'bg-red-400' : subject.matter_id.color === '#05df72' ? 'bg-green-400' : subject.matter_id.color === '#50a2ff' ? 'bg-blue-400' : subject.matter_id.color === '#ff8904' ? 'bg-orange-400' : 'bg-purple-400'}`}>
+                                <div className={`rounded-full min-w-4 min-h-4 text-white ${subject.matter_id?.color === '#ff6467' ? 'bg-red-400' : subject.matter_id?.color === '#05df72' ? 'bg-green-400' : subject.matter_id?.color === '#50a2ff' ? 'bg-blue-400' : subject.matter_id?.color === '#ff8904' ? 'bg-orange-400' : 'bg-purple-400'}`}>
                                 </div>
                                 <div className='min-w-0'>
                                     <p className="font-semibold truncate text-sm">{subject.title}</p>
-                                    <p className='text-sm text-base-content/60 truncate '>{subject.matter_id.title}</p>
+                                    <p className='text-sm text-base-content/60 truncate '>{subject.matter_id?.title}</p>
                                 </div>
                             </div>
 
@@ -138,12 +128,11 @@ const ReviewsPage = () => {
                                     <button onClick={(e) => { e.stopPropagation(); handleConclude(subject._id, "review1") }} className='btn btn-soft btn-sm'><CircleCheck size={15}/>Feito</button>
                                 )}
                             </div>
-                            {/* <p>{new Date(subject.review1).toLocaleDateString()}</p> */}
                         </div>
                     )))}
-
                 </div>
 
+                {/* --- 7 DIAS --- */}
                 <div className='border border-base-content/20 p-6 rounded-lg flex flex-col gap-2 shadow-md'>
                     <div className='font-bold  text-lg flex items-center gap-2'>
                         <Clock size={20}></Clock>
@@ -155,11 +144,11 @@ const ReviewsPage = () => {
                         ) : (subjects.filter(subject => subject.review2 && !subject.review2_concluded).sort((a, b) => new Date(a.review2) - new Date(b.review2)).map(subject => (
                             <div className='border border-base-content/20 rounded-lg p-2 flex justify-between items-center gap-2 cursor-pointer hover:bg-base-200/50 hover:shadow-md transition-shadow' key={subject._id} onClick={() => openSubjectModal(subject)}>
                                 <div className='flex items-center gap-2  min-w-0'>
-                                    <div className={`rounded-full min-w-4 min-h-4 text-white ${subject.matter_id.color === '#ff6467' ? 'bg-red-400' : subject.matter_id.color === '#05df72' ? 'bg-green-400' : subject.matter_id.color === '#50a2ff' ? 'bg-blue-400' : subject.matter_id.color === '#ff8904' ? 'bg-orange-400' : 'bg-purple-400'}`}>
+                                    <div className={`rounded-full min-w-4 min-h-4 text-white ${subject.matter_id?.color === '#ff6467' ? 'bg-red-400' : subject.matter_id?.color === '#05df72' ? 'bg-green-400' : subject.matter_id?.color === '#50a2ff' ? 'bg-blue-400' : subject.matter_id?.color === '#ff8904' ? 'bg-orange-400' : 'bg-purple-400'}`}>
                                     </div>
                                     <div className='min-w-0'>
                                         <p className="font-semibold min-w-0 truncate text-sm">{subject.title}</p>
-                                        <p className='text-sm text-base-content/60 truncate'>{subject.matter_id.title}</p>
+                                        <p className='text-sm text-base-content/60 truncate'>{subject.matter_id?.title}</p>
                                     </div>
                                 </div>
 
@@ -170,12 +159,12 @@ const ReviewsPage = () => {
                                     </div>
                                     <button onClick={(e) => { e.stopPropagation(); handleConclude(subject._id, "review2") }} className='btn btn-soft btn-sm'><CircleCheck size={15}></CircleCheck>Feito</button>
                                 </div>
-                                {/* <p>{new Date(subject.review1).toLocaleDateString()}</p> */}
                             </div>
                         )))}
                     </div>
                 </div>
 
+                {/* --- 30 DIAS --- */}
                 <div className='border border-base-content/20 p-6 rounded-lg flex flex-col gap-2 shadow-md'>
                     <div className='font-bold  text-lg flex items-center gap-2'>
                         <Clock size={20}></Clock>
@@ -187,11 +176,11 @@ const ReviewsPage = () => {
                         ) : (subjects.filter(subject => subject.review3 && !subject.review3_concluded).sort((a, b) => new Date(a.review3) - new Date(b.review3)).map(subject => (
                             <div className='border border-base-content/20 rounded-lg p-2 flex justify-between items-center gap-2 cursor-pointer hover:bg-base-200/50 hover:shadow-md transition-shadow' key={subject._id} onClick={() => openSubjectModal(subject)}>
                                 <div className='flex items-center gap-2 min-w-0'>
-                                    <div className={`rounded-full min-w-4 min-h-4 text-white ${subject.matter_id.color === '#ff6467' ? 'bg-red-400' : subject.matter_id.color === '#05df72' ? 'bg-green-400' : subject.matter_id.color === '#50a2ff' ? 'bg-blue-400' : subject.matter_id.color === '#ff8904' ? 'bg-orange-400' : 'bg-purple-400'}`}>
+                                    <div className={`rounded-full min-w-4 min-h-4 text-white ${subject.matter_id?.color === '#ff6467' ? 'bg-red-400' : subject.matter_id?.color === '#05df72' ? 'bg-green-400' : subject.matter_id?.color === '#50a2ff' ? 'bg-blue-400' : subject.matter_id?.color === '#ff8904' ? 'bg-orange-400' : 'bg-purple-400'}`}>
                                     </div>
                                     <div className='min-w-0'>
                                         <p className="font-semibold truncate text-sm">{subject.title}</p>
-                                        <p className='text-sm text-base-content/60 truncate'>{subject.matter_id.title}</p>
+                                        <p className='text-sm text-base-content/60 truncate'>{subject.matter_id?.title}</p>
                                     </div>
                                 </div>
 
@@ -202,12 +191,12 @@ const ReviewsPage = () => {
                                     </div>
                                     <button onClick={(e) => { e.stopPropagation(); handleConclude(subject._id, "review3") }} className='btn btn-soft btn-sm'><CircleCheck size={15}></CircleCheck>Feito</button>
                                 </div>
-                                {/* <p>{new Date(subject.review1).toLocaleDateString()}</p> */}
                             </div>
                         )))}
                     </div>
                 </div>
 
+                {/* --- CONCLUÍDAS --- */}
                 <div className='border border-base-content/20 p-6 rounded-lg flex flex-col gap-2 shadow-md'>
                     <div className='font-bold  text-lg flex items-center gap-2'>
                         <CircleCheck size={20}></CircleCheck>
@@ -225,11 +214,11 @@ const ReviewsPage = () => {
                             return concluded.map(review => (
                                 <div className='flex gap-2 border border-base-content/20 rounded-lg p-2  justify-between items-center cursor-pointer hover:bg-base-200/50 hover:shadow-md transition-shadow' key={`${subject._id}-${review.key}`} onClick={() => openSubjectModal(subject)}>
                                     <div className='flex items-center gap-2 min-w-0'>
-                                        <div className={`rounded-full min-w-4 min-h-4 text-white ${subject.matter_id.color === '#ff6467' ? 'bg-red-400' : subject.matter_id.color === '#05df72' ? 'bg-green-400' : subject.matter_id.color === '#50a2ff' ? 'bg-blue-400' : subject.matter_id.color === '#ff8904' ? 'bg-orange-400' : 'bg-purple-400'}`}>
+                                        <div className={`rounded-full min-w-4 min-h-4 text-white ${subject.matter_id?.color === '#ff6467' ? 'bg-red-400' : subject.matter_id?.color === '#05df72' ? 'bg-green-400' : subject.matter_id?.color === '#50a2ff' ? 'bg-blue-400' : subject.matter_id?.color === '#ff8904' ? 'bg-orange-400' : 'bg-purple-400'}`}>
                                         </div>
                                         <div className='min-w-0'>
                                             <p className="font-semibold truncate text-sm">{subject.title}</p>
-                                            <p className='text-sm text-base-content/60 truncate'>{subject.matter_id.title}</p>
+                                            <p className='text-sm text-base-content/60 truncate'>{subject.matter_id?.title}</p>
                                         </div>
                                     </div>
                                     <span className='badge badge-ghost rounded max-sm:px-5 truncate'>{review.label}</span>
@@ -240,6 +229,7 @@ const ReviewsPage = () => {
                 </div>
             </div>
 
+            {/* MODAL DE DETALHES */}
             <dialog id="subject_details_modal" className="modal">
                 <div className="modal-box">
                     {selectedSubject && (
@@ -318,7 +308,6 @@ const ReviewsPage = () => {
                     <button>close</button>
                 </form>
             </dialog>
-
         </div>
     )
 }
