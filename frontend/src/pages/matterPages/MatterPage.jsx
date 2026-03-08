@@ -285,9 +285,6 @@ const MatterItem = ({ matter }) => {
             <AnimatePresence>
                 {isExpanded && (
                     <motion.div
-                        {/* initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }} */}
                         className="overflow-hidden mt-2"
                     >
                         <div className='flex flex-col gap-4'>
