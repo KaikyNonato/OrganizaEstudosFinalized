@@ -54,7 +54,7 @@ export const getAllSubjects = async (req, res) => {
 
 export const updateSubject = async (req, res) => {
     const { id } = req.params;
-    const { title, status } = req.body;
+    const { title, status, review1, review2, review3 } = req.body; // <-- RECEBE AS DATAS AQUI
 
     try {
         const subject = await Subject.findById(id);
@@ -64,12 +64,20 @@ export const updateSubject = async (req, res) => {
         }
 
         if (title) subject.title = title;
+        
+        // NOVO: Atualiza as datas manualmente se vierem na requisição
+        if (review1) subject.review1 = review1;
+        if (review2) subject.review2 = review2;
+        if (review3) subject.review3 = review3;
+
+        // Mantém a lógica existente do status
         if (status) {
             subject.status = status;
             if (status === "CONCLUIDO") {
-                subject.review1 = new Date(Date.now() + 24 * 60 * 60 * 1000);
-                subject.review2 = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-                subject.review3 = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+                // Só cria novas datas automaticamente se não estivermos enviando elas na edição
+                if (!review1) subject.review1 = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                if (!review2) subject.review2 = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+                if (!review3) subject.review3 = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
             } else {
                 subject.review1 = null;
                 subject.review2 = null;
