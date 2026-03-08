@@ -515,7 +515,7 @@ const MatterPage = () => {
 
     return (
         <div className='flex flex-col gap-6'>
-            <div className='flex items-center justify-between'>
+            <div className='flex items-center gap-3 justify-between'>
                 <p className='font-medium'>◉ Gerencie suas matérias e assuntos</p>
                 {isAuthenticated ? (
                     <button className='btn' title='Adicionar nova Matéria' onClick={() => document.getElementById('create_matter_modal').showModal()}>
