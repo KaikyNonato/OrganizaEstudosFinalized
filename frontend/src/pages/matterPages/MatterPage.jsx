@@ -428,7 +428,7 @@ const MatterItem = ({ matter }) => {
                                     onChange={(e) => setEditReviewDate(e.target.value)}
                                 />
                                 <label className="label">
-                                    <span className="label-text-alt text-base-content/60">
+                                    <span className="text-base-content/60 text-xs whitespace-normal text-left">
                                         As revisões de 7 e 30 dias serão recalculadas automaticamente com base nesta nova data.
                                     </span>
                                 </label>
