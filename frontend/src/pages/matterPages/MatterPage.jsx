@@ -385,7 +385,7 @@ const MatterItem = ({ matter }) => {
                                 <span className='text-xs text-base-content/50 italic mb-2 mt-1'>Nenhum assunto cadastrado.</span>
                             )}
 
-                            <div className='flex items-center justify-between gap-2 mt-1'>
+                            <div className='flex items-center justify-between gap-2 m-[4px]'>
                                 <input
                                     placeholder='Novo assunto'
                                     className='input-sm input w-full bg-base-200 focus:bg-base-100'
