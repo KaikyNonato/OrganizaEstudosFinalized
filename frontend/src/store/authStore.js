@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import axios from 'axios'
 import toast from 'react-hot-toast'
-import { API_URL } from '../../API_URL'
+import { api } from '../lib/axios'
 
 
 // const API_URL = "http://localhost:5000/api/auth"
@@ -18,7 +18,7 @@ export const useAuthStore = create((set) => ({
     signup: async (email, password, name) => {
         set({ isLoading: true, error: null })
         try {
-            const response = await axios.post(API_URL + "/auth/signup", { email, password, name })
+            const response = await api.post("/auth/signup", { email, password, name })
             set({ user: response.data.user, isAuthenticated: true, isLoading: false })
         } catch (error) {
             set({ error: error.response.data.message || "Error signing up", isLoading: false })
@@ -29,7 +29,7 @@ export const useAuthStore = create((set) => ({
     verifyEmail: async (code) => {
         set({ isLoading: true, error: null })
         try {
-            const response = await axios.post(API_URL + "/auth/verify-email", { code })
+            const response = await api.post("/auth/verify-email", { code })
             set({ user: response.data.user, isAuthenticated: true, isLoading: false })
             return response.data
         } catch (error) {
@@ -42,7 +42,7 @@ export const useAuthStore = create((set) => ({
     login: async (email, password) => {
         set({ isLoading: true, error: null })
         try {
-            const response = await axios.post(API_URL + "/auth/login", { email, password })
+            const response = await api.post("/auth/login", { email, password })
             set({ user: response.data.user, isAuthenticated: true, isLoading: false })
             return response.data
 
@@ -56,7 +56,7 @@ export const useAuthStore = create((set) => ({
     checkAuth: async () => {
         set({ isCheckingAuth: true, error: null })
         try {
-            const response = await axios.get(API_URL + "/auth/check-auth")
+            const response = await api.get("/auth/check-auth")
             set({ user: response.data.user, isAuthenticated: true, isCheckingAuth: false })
         } catch (error) {
             set({ isAuthenticated: false, isCheckingAuth: false, error: null })
@@ -67,7 +67,7 @@ export const useAuthStore = create((set) => ({
     forgotPassword: async (email) => {
         set({ isLoading: true, error: null })
         try {
-            const response = await axios.post(API_URL + "/auth/forgot-password", { email })
+            const response = await api.post("/auth/forgot-password", { email })
             set({ isLoading: false })
             return response.data
         } catch (error) {
@@ -79,7 +79,7 @@ export const useAuthStore = create((set) => ({
     resetPassword: async (token, password) => {
         set({ isLoading: true, error: null })
         try {
-            const response = await axios.post(`${API_URL}/auth/reset-password/${token}`, { password })
+            const response = await api.post(`/auth/reset-password/${token}`, { password })
             set({ message: response.data.message, isLoading: false })
         } catch (error) {
             set({ isLoading: false, error: error.response.data.message || "Error resetting password" })
@@ -90,7 +90,7 @@ export const useAuthStore = create((set) => ({
     checkResetToken: async (token) => {
         set({ isLoading: true, error: null })
         try {
-            const response = await axios.get(`${API_URL}/auth/reset-password/${token}`)
+            const response = await api.get(`/auth/reset-password/${token}`)
             set({ isLoading: false })
             return response.data
         } catch (error) {
@@ -102,7 +102,7 @@ export const useAuthStore = create((set) => ({
     logout: async () => {
         set({ isLoading: true, error: null })
         try {
-            await axios.post(API_URL + "/auth/logout")
+            await api.post("/auth/logout")
             set({ user: null, isAuthenticated: false, isLoading: false })
             toast.success("Logged out successfully")
             window.location.reload()
