@@ -1,17 +1,22 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
-import { Plus, X, Pencil, Trash } from 'lucide-react'
+import { Plus, Pencil, Trash } from 'lucide-react'
 import { API_URL } from '../../../API_URL'
 import { useAuthStore } from '../../store/authStore'
+import { useMatterStore } from '../../store/matterStore' // <-- Importando cache das matérias
+import { useTimelineStore } from '../../store/timelineStore' // <-- Importando cache do cronograma
 import { Link } from 'react-router-dom'
 
 const daysOfWeek = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
 const TimeLinePage = () => {
     const { isAuthenticated } = useAuthStore()
-    const [schedule, setSchedule] = useState([]);
-    const [matters, setMatters] = useState([]);
+    
+    // Puxando dados e funções dos Stores
+    const { matters, fetchMatters } = useMatterStore()
+    const { schedule, fetchSchedule } = useTimelineStore()
+
     const [isEditing, setIsEditing] = useState(false);
     const [editId, setEditId] = useState(null);
     const [formData, setFormData] = useState({
@@ -23,31 +28,11 @@ const TimeLinePage = () => {
 
     useEffect(() => {
         if (!isAuthenticated) return; 
-        fetchMatters();
-        fetchTimeline();
-    }, [isAuthenticated]);
-
-    const fetchMatters = async () => {
-        try {
-            const res = await axios.get(API_URL+'/matter/get-matters');
-            if (res.data.success) {
-                setMatters(res.data.matters);
-            }
-        } catch (error) {
-            console.error("Erro ao buscar matérias:", error);
-        }
-    };
-
-    const fetchTimeline = async () => {
-        try {
-            const res = await axios.get(API_URL+'/timeline/get-timeline');
-            if (res.data.success) {
-                setSchedule(res.data.timeline);
-            }
-        } catch (error) {
-            console.log("Erro ao buscar cronograma (rota pode não existir ainda)");
-        }
-    };
+        
+        // Passando `false` para usar o cache, deixando a tela instantânea
+        fetchMatters(false);
+        fetchSchedule(false);
+    }, [isAuthenticated, fetchMatters, fetchSchedule]);
 
     const handleSaveMatter = async (e) => {
         e.preventDefault();
@@ -56,42 +41,37 @@ const TimeLinePage = () => {
 
         try {
             if (isEditing) {
-                const res = await axios.put(API_URL+`/timeline/update-timeline/${editId}`, formData);
+                const res = await axios.put(`${API_URL}/timeline/update-timeline/${editId}`, formData, { withCredentials: true });
                 if (res.data.success) {
                     toast.success("Horário atualizado com sucesso!", { id: toastId });
-                    // Atualiza o item na lista local
-                    setSchedule(prev => prev.map(item => item._id === editId ? res.data.timeLine : item));
+                    fetchSchedule(true); // Força a busca atualizada da API
                 }
             } else {
-                const res = await axios.post(API_URL+'/timeline/add-matter-timeline', formData);
+                const res = await axios.post(`${API_URL}/timeline/add-matter-timeline`, formData, { withCredentials: true });
                 if (res.data.success) {
                     toast.success("Matéria adicionada com sucesso!", { id: toastId });
-                    // Atualiza a lista localmente
-                    const selectedMatter = matters.find(m => m._id === formData.matter_id);
-                    const newEntry = { ...res.data.timeLine, matter_id: selectedMatter };
-                    setSchedule(prev => [...prev, newEntry]);
+                    fetchSchedule(true); // Força a busca atualizada da API
                 }
             }
 
             document.getElementById('add_matter_modal').close();
             resetForm();
         } catch (error) {
-            toast.error(error.response?.data?.message || "Erro ao salvar");
+            toast.error(error.response?.data?.message || "Erro ao salvar", { id: toastId });
         }
     };
 
     const handleDelete = async (id) => {
-        // if (!window.confirm("Tem certeza que deseja excluir este horário?")) return;
         const toastId = toast.loading("Deletando horário...")
 
         try {
-            const res = await axios.delete(API_URL+`/timeline/delete-timeline/${id}`);
+            const res = await axios.delete(`${API_URL}/timeline/delete-timeline/${id}`, { withCredentials: true });
             if (res.data.success) {
                 toast.success("Horário removido!", { id: toastId });
-                setSchedule(prev => prev.filter(item => item._id !== id));
+                fetchSchedule(true); // Força a busca atualizada da API
             }
         } catch (error) {
-            toast.error("Erro ao excluir horário");
+            toast.error("Erro ao excluir horário", { id: toastId });
         }
     };
 
