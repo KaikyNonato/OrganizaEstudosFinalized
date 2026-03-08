@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
-import { Plus, Pencil, Trash } from 'lucide-react'
+import { Plus, Pencil, Trash, Calendar, BookOpen } from 'lucide-react'
 import { API_URL } from '../../../API_URL'
 import { useAuthStore } from '../../store/authStore'
 import { useMatterStore } from '../../store/matterStore' // <-- Importando cache das matérias
@@ -14,7 +14,7 @@ const TimeLinePage = () => {
     const { isAuthenticated } = useAuthStore()
     
     // Puxando dados e funções dos Stores
-    const { matters, fetchMatters } = useMatterStore()
+    const { matters, fetchMatters, allSubjects, fetchAllSubjects } = useMatterStore()
     const { schedule, fetchSchedule } = useTimelineStore()
 
     const [isEditing, setIsEditing] = useState(false);
@@ -32,7 +32,8 @@ const TimeLinePage = () => {
         // Passando `false` para usar o cache, deixando a tela instantânea
         fetchMatters(false);
         fetchSchedule(false);
-    }, [isAuthenticated, fetchMatters, fetchSchedule]);
+        fetchAllSubjects(false);
+    }, [isAuthenticated, fetchMatters, fetchSchedule, fetchAllSubjects]);
 
     const handleSaveMatter = async (e) => {
         e.preventDefault();
@@ -103,6 +104,45 @@ const TimeLinePage = () => {
         setEditId(null);
     };
 
+    // Helper: Calcula a data específica da semana atual para um dia da semana (Ex: Segunda -> 2023-10-23)
+    const getTargetDate = (dayName) => {
+        const days = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+        const targetIndex = days.indexOf(dayName);
+        const today = new Date();
+        const currentDayIndex = today.getDay();
+        
+        const diff = targetIndex - currentDayIndex;
+        const targetDate = new Date(today);
+        targetDate.setDate(today.getDate() + diff);
+        return targetDate;
+    }
+
+    // Helper: Filtra revisões marcadas para o dia específico
+    const getReviewsForDay = (dayName) => {
+        const targetDate = getTargetDate(dayName);
+        if (!allSubjects || !allSubjects.length) return [];
+
+        return allSubjects.filter(sub => {
+            const checkReview = (revDate, isConcluded) => {
+                if (!revDate || isConcluded) return false;
+                const d = new Date(revDate);
+                return d.getDate() === targetDate.getDate() &&
+                       d.getMonth() === targetDate.getMonth() &&
+                       d.getFullYear() === targetDate.getFullYear();
+            }
+            return checkReview(sub.review1, sub.review1_concluded) ||
+                   checkReview(sub.review2, sub.review2_concluded) ||
+                   checkReview(sub.review3, sub.review3_concluded);
+        });
+    }
+
+    // Helper: Encontra o próximo assunto pendente para uma matéria
+    const getNextPendingSubject = (matterId) => {
+        if (!allSubjects || !allSubjects.length) return null;
+        const subjects = allSubjects.filter(s => (s.matter_id?._id === matterId || s.matter_id === matterId) && s.status === 'PENDENTE');
+        return subjects.sort((a, b) => (a.order || 0) - (b.order || 0))[0];
+    }
+
     return (
         <div className='flex flex-col gap-6'>
             <div className='flex justify-between items-center gap-3'>
@@ -117,17 +157,40 @@ const TimeLinePage = () => {
             </div>
 
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
-                {daysOfWeek.map((day) => (
+                {daysOfWeek.map((day) => {
+                    const reviews = getReviewsForDay(day);
+                    
+                    return (
                     <div key={day} className='flex flex-col gap-3 border border-base-content/20 rounded-lg p-6 shadow-md'>
                         <div className=''>
                             <h2 className='font-semibold  '>{day}</h2>
                         </div>
 
+                        {/* Seção de Revisões do Dia */}
+                        {reviews.length > 0 && (
+                            <div className='bg-base-200/60 p-2 rounded-lg text-xs border border-base-content/10 mb-1'>
+                                <div className='flex items-center gap-1 font-bold text-base-content/70 mb-1.5'>
+                                    <Calendar size={12} /> Revisões
+                                </div>
+                                <ul className='flex flex-col gap-1'>
+                                    {reviews.map(r => (
+                                        <li key={r._id} className='flex items-center gap-1.5 truncate' title={`Revisão: ${r.title}`}>
+                                            <div className={`w-1.5 h-1.5 rounded-full shrink-0`} style={{ backgroundColor: r.matter_id?.color || 'currentColor' }}></div>
+                                            <span className='truncate opacity-80'>{r.title}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
                         <div className='flex-1 space-y-2 '>
                             {schedule
                                 .filter(item => item.day === day)
                                 .sort((a, b) => a.startTime.localeCompare(b.startTime))
-                                .map((item) => (
+                                .map((item) => {
+                                    const nextSubject = getNextPendingSubject(item.matter_id?._id);
+                                    
+                                    return (
                                     <div key={item._id} className='border border-base-content/20 rounded-lg px-2 py-1 hover:shadow-md transition-shadow cursor-pointer group hover:bg-base-200/50'>
                                         <div className='flex justify-between items-center'>
 
@@ -172,8 +235,17 @@ const TimeLinePage = () => {
                                             </div>
                                             )}
                                         </div>
+                                        
+                                        {/* Exibe o próximo assunto pendente */}
+                                        {nextSubject && (
+                                            <div className='mt-2 pt-1 border-t border-base-content/10 flex items-center gap-1.5 text-xs text-base-content/60'>
+                                                <BookOpen size={12} className='shrink-0' />
+                                                <span className='font-semibold shrink-0'>Próx:</span>
+                                                <span className='truncate' title={nextSubject.title}>{nextSubject.title}</span>
+                                            </div>
+                                        )}
                                     </div>
-                                ))
+                                )})
                             }
 
                             {schedule.filter(item => item.day === day).length === 0 && (
@@ -183,7 +255,7 @@ const TimeLinePage = () => {
                             )}
                         </div>
                     </div>
-                ))}
+                )})}
             </div>
 
             {/* Modal de Adicionar Matéria */}
