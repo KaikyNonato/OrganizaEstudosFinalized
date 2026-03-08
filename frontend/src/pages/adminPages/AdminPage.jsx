@@ -390,7 +390,7 @@ const AdminPage = () => {
                     
                     {/* Barra de Pesquisa */}
                     <div className="relative mb-4">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/50" size={18} />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/50 z-10" size={18} />
                         <input 
                             type="text" 
                             placeholder="Pesquisar assunto..." 
