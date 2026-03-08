@@ -19,6 +19,7 @@ const MatterItem = ({ matter }) => {
     const [editReviewDate, setEditReviewDate] = useState('') // NOVO: Estado para a data da revisão
     const [editTitleMatter, setEditTitleMatter] = useState('')
     const [editColorMatter, setEditColorMatter] = useState('')
+    const [viewingSubject, setViewingSubject] = useState(null)
 
     const [isExpanded, setIsExpanded] = useState(true)
     const [expandedAttachments, setExpandedAttachments] = useState({})
@@ -109,6 +110,11 @@ const MatterItem = ({ matter }) => {
         } catch (error) {
             toast.error(error.response?.data?.message || error.message || "Erro ao criar assunto", { id: toastId })
         }
+    }
+
+    const openDetailsModal = (subject) => {
+        setViewingSubject(subject)
+        document.getElementById(`details_subject_modal_${matter._id}`).showModal()
     }
 
     const openEditMatterModal = () => {
@@ -294,7 +300,10 @@ const MatterItem = ({ matter }) => {
                             {subjects.length > 0 ? (
                                 subjects.map((subject, index) => (
                                     <div key={subject._id} className="flex flex-col">
-                                        <div className={`bg-base-200/60 py-1.5 pl-3 pr-1 border-base-content/20 border text-sm flex flex-col gap-2 ${subject.attachments && subject.attachments.length > 0 ? 'rounded-t-lg' : 'rounded-lg'}`}>
+                                        <div 
+                                            className={`bg-base-200/60 py-1.5 pl-3 pr-1 border-base-content/20 border text-sm flex flex-col gap-2 ${subject.attachments && subject.attachments.length > 0 ? 'rounded-t-lg' : 'rounded-lg'} cursor-pointer hover:bg-base-200/80 transition-colors`}
+                                            onClick={(e) => { if (!e.target.closest('button, select, input, label, a')) openDetailsModal(subject) }}
+                                        >
                                             <div className='flex justify-between items-center'>
                                                 <div className='flex gap-3 items-center min-w-0'>
                                                     <div className='flex flex-col'>
@@ -306,7 +315,12 @@ const MatterItem = ({ matter }) => {
                                                         </button>
                                                     </div>
                                                     {subject.status === 'PENDENTE' ? <CircleX className='text-red-400 max-sm:min-w-5 min-w-5' size={15} /> : <CircleCheck className='text-green-400 max-sm:min-w-5 min-w-5' size={15} />}
-                                                    <span className='font-semibold truncate lg:max-w-100' title={subject.title}>{subject.title}</span>
+                                                    <span 
+                                                        className='font-semibold truncate lg:max-w-100' 
+                                                        title={subject.title}
+                                                    >
+                                                        {subject.title}
+                                                    </span>
                                                 </div>
 
                                                 <div className='flex items-center gap-2 '>
@@ -385,7 +399,7 @@ const MatterItem = ({ matter }) => {
                                 <span className='text-xs text-base-content/50 italic mb-2 mt-1'>Nenhum assunto cadastrado.</span>
                             )}
 
-                            <div className='flex items-center justify-between gap-2 m-[4px]'>
+                            <div className='flex items-center justify-between gap-2 mt-1'>
                                 <input
                                     placeholder='Novo assunto'
                                     className='input-sm input w-full bg-base-200 focus:bg-base-100'
@@ -405,6 +419,93 @@ const MatterItem = ({ matter }) => {
                     Matéria fechada, abra para ver o conteudo
                 </div>
             )}
+
+            {/* MODAL DE DETALHES DO ASSUNTO */}
+            <dialog id={`details_subject_modal_${matter._id}`} className="modal">
+                <div className="modal-box">
+                    {viewingSubject && (
+                        <>
+                            <h3 className="font-bold text-lg flex items-center gap-2">
+                                {/* <FileText size={20} className="text-primary min-w-5"/> */}
+                                {viewingSubject.title}
+                            </h3>
+                            
+                            <div className="py-4 flex flex-col gap-4">
+                                <div className="flex items-center gap-2">
+                                    <span className="font-semibold">Status:</span>
+                                    {viewingSubject.status === 'PENDENTE' ? (
+                                        <div className="badge badge-error gap-1 text-white">
+                                            <CircleX size={12} /> PENDENTE
+                                        </div>
+                                    ) : (
+                                        <div className="badge badge-success gap-1 text-white">
+                                            <CircleCheck size={12} /> CONCLUÍDO
+                                        </div>
+                                    )}
+                                </div>
+
+                                {viewingSubject.status === 'CONCLUIDO' && (
+                                    <div className="bg-base-200/50 p-3 rounded-lg border border-base-content/10">
+                                        <p className="font-semibold text-sm mb-2 opacity-70">Cronograma de Revisões:</p>
+                                        <div className="flex flex-col gap-1 text-sm">
+                                            <div className="flex justify-between">
+                                                <span>1ª Revisão (24h):</span>
+                                                <span className="font-mono">{viewingSubject.review1 ? new Date(viewingSubject.review1).toLocaleDateString() : '-'}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span>2ª Revisão (7 dias):</span>
+                                                <span className="font-mono">{viewingSubject.review2 ? new Date(viewingSubject.review2).toLocaleDateString() : '-'}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span>3ª Revisão (30 dias):</span>
+                                                <span className="font-mono">{viewingSubject.review3 ? new Date(viewingSubject.review3).toLocaleDateString() : '-'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div>
+                                    <p className="font-semibold mb-2 flex items-center gap-2">
+                                        <Paperclip size={16} /> 
+                                        Anexos ({viewingSubject.attachments?.length || 0})
+                                    </p>
+                                    {viewingSubject.attachments && viewingSubject.attachments.length > 0 ? (
+                                        <div className="flex flex-col gap-2">
+                                            {viewingSubject.attachments.map(file => (
+                                                <a 
+                                                    key={file.public_id} 
+                                                    href={file.url} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer" 
+                                                    className="flex items-center gap-3 p-2 bg-base-200 rounded-lg hover:bg-base-300 transition-colors group"
+                                                >
+                                                    <div className="bg-base-100 p-1.5 rounded text-primary">
+                                                        <FileText size={16} />
+                                                    </div>
+                                                    <span className="text-sm truncate flex-1 group-hover:text-primary transition-colors">{file.name}</span>
+                                                </a>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="text-sm text-base-content/50 italic bg-base-200/30 p-2 rounded text-center">
+                                            Nenhum arquivo anexado.
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="modal-action">
+                                <form method="dialog">
+                                    <button className="btn">Fechar</button>
+                                </form>
+                            </div>
+                        </>
+                    )}
+                </div>
+                <form method="dialog" className="modal-backdrop">
+                    <button>close</button>
+                </form>
+            </dialog>
 
             {/* MODAL DE EDIÇÃO DE ASSUNTO COM NOVA OPÇÃO DE DATA */}
             <dialog id={`edit_subject_modal_${matter._id}`} className="modal">
