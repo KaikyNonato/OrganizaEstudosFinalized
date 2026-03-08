@@ -285,6 +285,9 @@ const MatterItem = ({ matter }) => {
             <AnimatePresence>
                 {isExpanded && (
                     <motion.div
+                        // initial={{ height: 0, opacity: 0 }}
+                        // animate={{ height: 'auto', opacity: 1 }}
+                        // exit={{ height: 0, opacity: 0 }}
                         className="overflow-hidden mt-2"
                     >
                         <div className='flex flex-col gap-4'>
@@ -396,6 +399,12 @@ const MatterItem = ({ matter }) => {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {!isExpanded && (
+                <div className='py-10 text-center text-sm text-base-content/50 italic'>
+                    Matéria fechada, abra para ver o conteudo
+                </div>
+            )}
 
             {/* MODAL DE EDIÇÃO DE ASSUNTO COM NOVA OPÇÃO DE DATA */}
             <dialog id={`edit_subject_modal_${matter._id}`} className="modal">
