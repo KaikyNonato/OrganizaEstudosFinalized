@@ -20,7 +20,10 @@ const Countdown = ({ targetDate, textSize = "text-sm" }) => {
                 now.getMonth() === target.getMonth() &&
                 now.getFullYear() === target.getFullYear();
 
-            if (diff <= 0) {
+            if (isToday) {
+                setIsLate(false);
+                setTimeLeft("HOJE");
+            } else if (diff <= 0) {
                 setIsLate(true);
                 const absDiff = Math.abs(diff);
                 const days = Math.floor(absDiff / (1000 * 60 * 60 * 24));
@@ -32,9 +35,6 @@ const Countdown = ({ targetDate, textSize = "text-sm" }) => {
                     const minutes = Math.floor(absDiff / (1000 * 60));
                     setTimeLeft(` ${hours > 0 ? hours + 'h' : minutes + 'm'}`);
                 }
-            } else if (isToday) {
-                setIsLate(false);
-                setTimeLeft("HOJE");
             } else if (diff > 24 * 60 * 60 * 1000) {
                 setIsLate(false);
                 const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -51,9 +51,9 @@ const Countdown = ({ targetDate, textSize = "text-sm" }) => {
         return () => clearInterval(interval);
     }, [targetDate]);
 
-    return <span className={`font-mono ${textSize} truncate font-semibold ${isLate ? 'text-red-400 text-center flex  gap-1 items-center ' : 'flex  gap-1 items-center text-center '}`}>
+    return <span className={`font-mono ${textSize} truncate font-semibold ${isLate ? 'text-red-400' : timeLeft === 'HOJE' ? 'text-green-400' : ''} flex gap-1 items-center text-center`}>
         <Clock className='min-w-[20px] sm:hidden' size={15} />
-        {isLate ? <span className='max-sm:hidden'>atrasado há</span> : <span className='max-sm:hidden'>em</span>}
+        {isLate ? <span className='max-sm:hidden'>atrasado há</span> : (timeLeft !== "HOJE" && <span className='max-sm:hidden'>em</span>)}
         {timeLeft}
     </span>;
 };
@@ -90,6 +90,14 @@ const ReviewsPage = () => {
         return new Date(date) < new Date();
     }
 
+    const checkIsToday = (date) => {
+        const d = new Date(date);
+        const today = new Date();
+        return d.getDate() === today.getDate() &&
+            d.getMonth() === today.getMonth() &&
+            d.getFullYear() === today.getFullYear();
+    }
+
     const openSubjectModal = (subject) => {
         setSelectedSubject(subject)
         document.getElementById('subject_details_modal').showModal()
@@ -109,7 +117,7 @@ const ReviewsPage = () => {
                     {subjects.filter(subject => subject.review1 && !subject.review1_concluded).length === 0 ? (
                         <span className='text-sm text-base-content/60'>Nenhuma revisão cadastrada</span>
                     ) : (subjects.filter(subject => subject.review1 && !subject.review1_concluded).sort((a, b) => new Date(a.review1) - new Date(b.review1)).map(subject => (
-                        <div className='border border-base-content/20 rounded-lg p-2 flex justify-between items-center gap-2 cursor-pointer hover:bg-base-200/50 hover:shadow-md transition-shadow' key={subject._id} onClick={() => openSubjectModal(subject)}>
+                        <div className={`border rounded-lg p-2 flex justify-between items-center gap-2 cursor-pointer hover:bg-base-200/50 hover:shadow-md transition-shadow ${checkIsToday(subject.review1) ? 'border-green-400' : checkIsLate(subject.review1) ? 'border-red-400' : 'border-base-content/20'}`} key={subject._id} onClick={() => openSubjectModal(subject)}>
                             <div className='flex items-center gap-2 min-w-0'>
                                 <div className={`rounded-full min-w-4 min-h-4 text-white ${subject.matter_id?.color === '#ff6467' ? 'bg-red-400' : subject.matter_id?.color === '#05df72' ? 'bg-green-400' : subject.matter_id?.color === '#50a2ff' ? 'bg-blue-400' : subject.matter_id?.color === '#ff8904' ? 'bg-orange-400' : 'bg-purple-400'}`}>
                                 </div>
@@ -120,7 +128,7 @@ const ReviewsPage = () => {
                             </div>
 
                             <div className='flex gap-2 items-center'>
-                                <span className={`badge badge-ghost rounded max-sm:hidden ${checkIsLate(subject.review1) ? 'text-red-400 ' : ''}`}>24 Horas</span>
+                                <span className={`badge badge-ghost rounded max-sm:hidden ${checkIsToday(subject.review1) ? 'text-green-400' : checkIsLate(subject.review1) ? 'text-red-400 ' : ''}`}>24 Horas</span>
                                 <div className='text-base-content/40'>
                                     <Countdown targetDate={subject.review1} textSize="text-xs" />
                                 </div>
@@ -142,7 +150,7 @@ const ReviewsPage = () => {
                         {subjects.filter(subject => subject.review2 && !subject.review2_concluded).length === 0 ? (
                             <span className='text-sm text-base-content/60'>Nenhuma revisão cadastrada</span>
                         ) : (subjects.filter(subject => subject.review2 && !subject.review2_concluded).sort((a, b) => new Date(a.review2) - new Date(b.review2)).map(subject => (
-                            <div className='border border-base-content/20 rounded-lg p-2 flex justify-between items-center gap-2 cursor-pointer hover:bg-base-200/50 hover:shadow-md transition-shadow' key={subject._id} onClick={() => openSubjectModal(subject)}>
+                        <div className={`border rounded-lg p-2 flex justify-between items-center gap-2 cursor-pointer hover:bg-base-200/50 hover:shadow-md transition-shadow ${checkIsToday(subject.review2) ? 'border-green-400' : checkIsLate(subject.review2) ? 'border-red-400' : 'border-base-content/20'}`} key={subject._id} onClick={() => openSubjectModal(subject)}>
                                 <div className='flex items-center gap-2  min-w-0'>
                                     <div className={`rounded-full min-w-4 min-h-4 text-white ${subject.matter_id?.color === '#ff6467' ? 'bg-red-400' : subject.matter_id?.color === '#05df72' ? 'bg-green-400' : subject.matter_id?.color === '#50a2ff' ? 'bg-blue-400' : subject.matter_id?.color === '#ff8904' ? 'bg-orange-400' : 'bg-purple-400'}`}>
                                     </div>
@@ -153,7 +161,7 @@ const ReviewsPage = () => {
                                 </div>
 
                                 <div className='flex gap-2 items-center'>
-                                    <span className={`badge badge-ghost rounded max-sm:hidden ${checkIsLate(subject.review2) ? 'text-red-400 ' : ''}`}>7 Dias</span>
+                                    <span className={`badge badge-ghost rounded max-sm:hidden ${checkIsToday(subject.review2) ? 'text-green-400' : checkIsLate(subject.review2) ? 'text-red-400 ' : ''}`}>7 Dias</span>
                                     <div className='text-base-content/40 '>
                                         <Countdown targetDate={subject.review2} textSize="text-xs" />
                                     </div>
@@ -174,7 +182,7 @@ const ReviewsPage = () => {
                         {subjects.filter(subject => subject.review3 && !subject.review3_concluded).length === 0 ? (
                             <span className='text-sm text-base-content/60'>Nenhuma revisão cadastrada</span>
                         ) : (subjects.filter(subject => subject.review3 && !subject.review3_concluded).sort((a, b) => new Date(a.review3) - new Date(b.review3)).map(subject => (
-                            <div className='border border-base-content/20 rounded-lg p-2 flex justify-between items-center gap-2 cursor-pointer hover:bg-base-200/50 hover:shadow-md transition-shadow' key={subject._id} onClick={() => openSubjectModal(subject)}>
+                        <div className={`border rounded-lg p-2 flex justify-between items-center gap-2 cursor-pointer hover:bg-base-200/50 hover:shadow-md transition-shadow ${checkIsToday(subject.review3) ? 'border-green-400' : checkIsLate(subject.review3) ? 'border-red-400' : 'border-base-content/20'}`} key={subject._id} onClick={() => openSubjectModal(subject)}>
                                 <div className='flex items-center gap-2 min-w-0'>
                                     <div className={`rounded-full min-w-4 min-h-4 text-white ${subject.matter_id?.color === '#ff6467' ? 'bg-red-400' : subject.matter_id?.color === '#05df72' ? 'bg-green-400' : subject.matter_id?.color === '#50a2ff' ? 'bg-blue-400' : subject.matter_id?.color === '#ff8904' ? 'bg-orange-400' : 'bg-purple-400'}`}>
                                     </div>
@@ -185,7 +193,7 @@ const ReviewsPage = () => {
                                 </div>
 
                                 <div className='flex gap-2 items-center'>
-                                    <span className={`badge badge-ghost rounded max-sm:hidden ${checkIsLate(subject.review3) ? 'text-red-400' : ''}`}>30 Dias</span>
+                                    <span className={`badge badge-ghost rounded max-sm:hidden ${checkIsToday(subject.review3) ? 'text-green-400' : checkIsLate(subject.review3) ? 'text-red-400' : ''}`}>30 Dias</span>
                                     <div className='text-base-content/40 '>
                                         <Countdown targetDate={subject.review3} textSize="text-xs" />
                                     </div>
