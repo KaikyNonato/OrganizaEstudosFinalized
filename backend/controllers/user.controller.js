@@ -4,7 +4,8 @@ import Subject from '../models/subject.model.js';
 
 // FUNÇÔES DE USUÁRIO
 export const updateUser = async (req, res) => {
-    const { name } = req.body;
+    // ATUALIZE ESTA LINHA para desestruturar também os quickLinks:
+    const { name, quickLinks } = req.body;
 
     try {
         const user = await User.findById(req.userId);
@@ -12,7 +13,10 @@ export const updateUser = async (req, res) => {
             return res.status(404).json({ success: false, message: "User not found" });
         }
 
-        user.name = name || user.name;
+        // ADICIONE ISTO AQUI:
+        if (name) user.name = name;
+        if (quickLinks) user.quickLinks = quickLinks;
+
         await user.save();
 
         res.status(200).json({ success: true, message: "User updated successfully", user });
