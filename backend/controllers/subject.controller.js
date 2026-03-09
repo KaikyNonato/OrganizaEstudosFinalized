@@ -12,9 +12,14 @@ export const createSubject = async (req, res) => {
             return res.status(400).json({ success: false, message: "All fields are required" });
         }
 
+        // NOVO: Procura o último assunto desta matéria para saber qual é a última posição (order)
+        const lastSubject = await Subject.findOne({ matter_id }).sort("-order");
+        const newOrder = lastSubject ? lastSubject.order + 1 : 0;
+
         const subject = new Subject({
             title,
-            matter_id
+            matter_id,
+            order: newOrder // Adiciona o novo assunto no final da fila!
         });
 
         await subject.save();
