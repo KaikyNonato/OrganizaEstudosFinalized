@@ -57,9 +57,9 @@ const MatterItem = ({ matter }) => {
         formData.append("file", file);
 
         const toastId = toast.loading("Enviando arquivo...");
-        
+
         try {
-            const response = await axios.post(API_URL+`/subject/${subjectId}/upload`, formData, {
+            const response = await axios.post(API_URL + `/subject/${subjectId}/upload`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
                 withCredentials: true
             });
@@ -79,7 +79,7 @@ const MatterItem = ({ matter }) => {
         const toastId = toast.loading("Removendo arquivo...");
 
         try {
-            const response = await axios.put(API_URL+`/subject/remove-file/${subjectId}`, {
+            const response = await axios.put(API_URL + `/subject/remove-file/${subjectId}`, {
                 public_id: publicId
             }, { withCredentials: true });
             if (response.data.success) {
@@ -97,7 +97,7 @@ const MatterItem = ({ matter }) => {
         const toastId = toast.loading("Criando assunto...")
 
         try {
-            const response = await axios.post(API_URL+"/subject/create-subject", {
+            const response = await axios.post(API_URL + "/subject/create-subject", {
                 title: subjectTitle,
                 matter_id: matter._id
             }, { withCredentials: true })
@@ -128,7 +128,7 @@ const MatterItem = ({ matter }) => {
         const toastId = toast.loading("Atualizando matéria...")
 
         try {
-            const response = await axios.put(API_URL+`/matter/update-matter/${matter._id}`, {
+            const response = await axios.put(API_URL + `/matter/update-matter/${matter._id}`, {
                 title: editTitleMatter,
                 color: editColorMatter
             }, { withCredentials: true })
@@ -146,7 +146,7 @@ const MatterItem = ({ matter }) => {
         const toastId = toast.loading("Deletando assunto...")
 
         try {
-            const response = await axios.delete(API_URL+`/subject/delete-subject/${subjectId}`, { withCredentials: true })
+            const response = await axios.delete(API_URL + `/subject/delete-subject/${subjectId}`, { withCredentials: true })
             if (response.data.success) {
                 toast.success("Assunto deletado com sucesso!", { id: toastId })
                 fetchSubjects(matter._id, true)
@@ -158,7 +158,7 @@ const MatterItem = ({ matter }) => {
 
     const handleUpdateStatus = async (subjectId, newStatus) => {
         try {
-            const response = await axios.put(API_URL+`/subject/update-subject/${subjectId}`, { status: newStatus }, { withCredentials: true })
+            const response = await axios.put(API_URL + `/subject/update-subject/${subjectId}`, { status: newStatus }, { withCredentials: true })
             if (response.data.success) {
                 fetchSubjects(matter._id, true)
             }
@@ -170,7 +170,7 @@ const MatterItem = ({ matter }) => {
     const openEditModal = (subject) => {
         setEditingSubject(subject)
         setEditTitle(subject.title)
-        
+
         // Puxa a data da primeira revisão se existir para mostrar no input
         if (subject.review1 && subject.status === 'CONCLUIDO') {
             const d = new Date(subject.review1);
@@ -181,7 +181,7 @@ const MatterItem = ({ matter }) => {
         } else {
             setEditReviewDate('');
         }
-        
+
         document.getElementById(`edit_subject_modal_${matter._id}`).showModal()
     }
 
@@ -196,11 +196,11 @@ const MatterItem = ({ matter }) => {
         if (editReviewDate && editingSubject.status === 'CONCLUIDO') {
             const [year, month, day] = editReviewDate.split('-')
             const r1 = new Date(year, month - 1, day)
-            
+
             // A revisão 2 (7 dias) é 6 dias após a primeira (dia 1)
             const r2 = new Date(r1)
             r2.setDate(r2.getDate() + 6)
-            
+
             // A revisão 3 (30 dias) é 29 dias após a primeira
             const r3 = new Date(r1)
             r3.setDate(r3.getDate() + 29)
@@ -211,7 +211,7 @@ const MatterItem = ({ matter }) => {
         }
 
         try {
-            const response = await axios.put(API_URL+`/subject/update-subject/${editingSubject._id}`, payload, { withCredentials: true })
+            const response = await axios.put(API_URL + `/subject/update-subject/${editingSubject._id}`, payload, { withCredentials: true })
             if (response.data.success) {
                 toast.success("Assunto atualizado!", { id: toastId })
                 fetchSubjects(matter._id, true)
@@ -241,7 +241,7 @@ const MatterItem = ({ matter }) => {
 
         try {
             const updates = newSubjects.map((s, i) => ({ _id: s._id, order: i }))
-            await axios.put(API_URL+"/subject/reorder-subjects", { updates }, { withCredentials: true })
+            await axios.put(API_URL + "/subject/reorder-subjects", { updates }, { withCredentials: true })
         } catch (error) {
             toast.error("Erro ao salvar a nova ordem")
             fetchSubjects(matter._id, true)
@@ -251,7 +251,7 @@ const MatterItem = ({ matter }) => {
     const handleDeleteMatter = async () => {
         const toastId = toast.loading("Deletando matéria...")
         try {
-            const response = await axios.delete(API_URL+`/matter/delete-matter/${matter._id}`, { withCredentials: true })
+            const response = await axios.delete(API_URL + `/matter/delete-matter/${matter._id}`, { withCredentials: true })
             if (response.data.success) {
                 toast.success("Matéria deletada com sucesso!", { id: toastId })
                 fetchMatters(true)
@@ -262,14 +262,14 @@ const MatterItem = ({ matter }) => {
     }
 
     return (
-        <motion.div 
-            initial={{ opacity: 0, y: 15 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            transition={{ duration: 0.3 }} 
+        <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
             className="border border-base-content/20 p-4 sm:p-6 rounded-lg flex flex-col shadow-md bg-base-100"
         >
             <div className='flex items-center justify-between mb-2'>
-                <div 
+                <div
                     className='flex gap-2 items-center min-w-0 flex-1 cursor-pointer hover:opacity-70 transition-opacity'
                     onClick={() => setIsExpanded(!isExpanded)}
                 >
@@ -281,7 +281,7 @@ const MatterItem = ({ matter }) => {
                         {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                     </div>
                 </div>
-                
+
                 <div className='flex gap-2 ml-4'>
                     <button onClick={openEditMatterModal} className='btn btn-sm btn-ghost hover:bg-transparent hover:border-transparent hover:shadow-none p-0 '><PencilLine className={`  ${matter.color === '#ff6467' ? 'hover:text-red-400' : matter.color === '#05df72' ? 'hover:text-green-400' : matter.color === '#50a2ff' ? 'hover:text-blue-400' : matter.color === '#ff8904' ? 'hover:text-orange-400' : 'hover:text-purple-400'}`} size={15}></PencilLine></button>
                     <button onClick={handleDeleteMatter} className='btn btn-sm btn-ghost hover:bg-transparent hover:border-transparent hover:shadow-none p-0' title='Deletar Matéria'><Trash className=' hover:text-red-400' size={15}></Trash></button>
@@ -300,7 +300,7 @@ const MatterItem = ({ matter }) => {
                             {subjects.length > 0 ? (
                                 subjects.map((subject, index) => (
                                     <div key={subject._id} className="flex flex-col">
-                                        <div 
+                                        <div
                                             className={`bg-base-200/60 py-1.5 pl-3 pr-1 border-base-content/20 border text-sm flex flex-col gap-2 ${subject.attachments && subject.attachments.length > 0 ? 'rounded-t-lg' : 'rounded-lg'} cursor-pointer hover:bg-base-200/80 transition-colors`}
                                             onClick={(e) => { if (!e.target.closest('button, select, input, label, a')) openDetailsModal(subject) }}
                                         >
@@ -315,8 +315,8 @@ const MatterItem = ({ matter }) => {
                                                         </button>
                                                     </div>
                                                     {subject.status === 'PENDENTE' ? <CircleX className='text-red-400 max-sm:min-w-5 min-w-5' size={15} /> : <CircleCheck className='text-green-400 max-sm:min-w-5 min-w-5' size={15} />}
-                                                    <span 
-                                                        className='font-semibold truncate lg:max-w-100' 
+                                                    <span
+                                                        className='font-semibold truncate lg:max-w-100'
                                                         title={subject.title}
                                                     >
                                                         {subject.title}
@@ -355,7 +355,7 @@ const MatterItem = ({ matter }) => {
 
                                         {subject.attachments && subject.attachments.length > 0 && (
                                             <div className='border border-t-0 border-base-content/20 rounded-b-lg bg-base-200/40'>
-                                                <div 
+                                                <div
                                                     className='flex justify-between items-center p-2 cursor-pointer hover:bg-base-300/50 transition-colors'
                                                     onClick={() => toggleAttachments(subject._id)}
                                                 >
@@ -364,12 +364,12 @@ const MatterItem = ({ matter }) => {
                                                         {expandedAttachments[subject._id] ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                                                     </div>
                                                 </div>
-                                                
+
                                                 <AnimatePresence>
                                                     {expandedAttachments[subject._id] && (
-                                                        <motion.div 
-                                                            initial={{ height: 0, opacity: 0 }} 
-                                                            animate={{ height: 'auto', opacity: 1 }} 
+                                                        <motion.div
+                                                            initial={{ height: 0, opacity: 0 }}
+                                                            animate={{ height: 'auto', opacity: 1 }}
                                                             exit={{ height: 0, opacity: 0 }}
                                                             className='overflow-hidden'
                                                         >
@@ -425,20 +425,34 @@ const MatterItem = ({ matter }) => {
                 <div className="modal-box">
                     {viewingSubject && (
                         <>
-                            <h3 className="font-bold text-lg flex items-center gap-2">
+                            <h3 className="font-bold text-lg flex items-center gap-2 mb-3">
                                 {/* <FileText size={20} className="text-primary min-w-5"/> */}
                                 {viewingSubject.title}
                             </h3>
-                            
+
+
+                            <div className='flex items-center gap-2'>
+                                <span className='font-semibold text-sm'>Matéria:</span>
+                                <div className="flex items-center gap-2 bg-base-200 px-2 py-1 rounded-full text-xs">
+                                    <div className={`w-2 h-2 rounded-full ${matter?.color === '#ff6467' ? 'bg-red-400' :
+                                        matter?.color === '#05df72' ? 'bg-green-400' :
+                                            matter?.color === '#50a2ff' ? 'bg-blue-400' :
+                                                matter?.color === '#ff8904' ? 'bg-orange-400' :
+                                                    'bg-purple-400'
+                                        }`}></div>
+                                    <span>{matter.title}</span>
+                                </div>
+                            </div>
+
                             <div className="py-4 flex flex-col gap-4">
                                 <div className="flex items-center gap-2">
-                                    <span className="font-semibold">Status:</span>
+                                    <span className="font-semibold text-sm">Status:</span>
                                     {viewingSubject.status === 'PENDENTE' ? (
-                                        <div className="badge badge-error gap-1 text-white">
+                                        <div className="badge badge-sm badge-error  text-white">
                                             <CircleX size={12} /> PENDENTE
                                         </div>
                                     ) : (
-                                        <div className="badge badge-success gap-1 text-white">
+                                        <div className="badge badge-sm badge-success gap-1 text-white">
                                             <CircleCheck size={12} /> CONCLUÍDO
                                         </div>
                                     )}
@@ -447,40 +461,44 @@ const MatterItem = ({ matter }) => {
                                 {viewingSubject.status === 'CONCLUIDO' && (
                                     <div className="bg-base-200/50 p-3 rounded-lg border border-base-content/10">
                                         <p className="font-semibold text-sm mb-2 opacity-70">Cronograma de Revisões:</p>
-                                        <div className="flex flex-col gap-1 text-sm">
+                                        <div className="flex flex-col gap-1 ">
                                             <div className="flex justify-between">
-                                                <span>1ª Revisão (24h):</span>
-                                                <span className="font-mono">{viewingSubject.review1 ? new Date(viewingSubject.review1).toLocaleDateString() : '-'}</span>
+                                                <span className='text-xs font-bold'>1ª Revisão (24h):</span>
+                                                <span className="font-mono ">{viewingSubject.review1 ? new Date(viewingSubject.review1).toLocaleDateString() : '-'}</span>
                                             </div>
                                             <div className="flex justify-between">
-                                                <span>2ª Revisão (7 dias):</span>
-                                                <span className="font-mono">{viewingSubject.review2 ? new Date(viewingSubject.review2).toLocaleDateString() : '-'}</span>
+                                                <span className='text-xs font-bold'>2ª Revisão (7 dias):</span>
+                                                <span className="font-mono ">{viewingSubject.review2 ? new Date(viewingSubject.review2).toLocaleDateString() : '-'}</span>
                                             </div>
                                             <div className="flex justify-between">
-                                                <span>3ª Revisão (30 dias):</span>
-                                                <span className="font-mono">{viewingSubject.review3 ? new Date(viewingSubject.review3).toLocaleDateString() : '-'}</span>
+                                                <span className='text-xs font-bold'>3ª Revisão (30 dias):</span>
+                                                <span className="font-mono ">{viewingSubject.review3 ? new Date(viewingSubject.review3).toLocaleDateString() : '-'}</span>
                                             </div>
                                         </div>
                                     </div>
                                 )}
 
                                 <div>
-                                    <p className="font-semibold mb-2 flex items-center gap-2">
-                                        <Paperclip size={16} /> 
+                                    <p className="font-semibold mb-2 flex items-center gap-2 text-sm">
+                                        <Paperclip size={16} />
                                         Anexos ({viewingSubject.attachments?.length || 0})
                                     </p>
                                     {viewingSubject.attachments && viewingSubject.attachments.length > 0 ? (
                                         <div className="flex flex-col gap-2">
                                             {viewingSubject.attachments.map(file => (
-                                                <a 
-                                                    key={file.public_id} 
-                                                    href={file.url} 
-                                                    target="_blank" 
-                                                    rel="noopener noreferrer" 
-                                                    className="flex items-center gap-3 p-2 bg-base-200 rounded-lg hover:bg-base-300 transition-colors group"
+                                                <a
+                                                    key={file.public_id}
+                                                    href={file.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center gap-2 p-2 border border-base-content/20 rounded hover:bg-base-200 transition-colors text-sm"
                                                 >
-                                                    <div className="bg-base-100 p-1.5 rounded text-primary">
-                                                        <FileText size={16} />
+                                                    <div className="bg-base-100  rounded text-primary">
+                                                        <FileText size={16}   className={` min-w-[20px]  ${matter?.color === '#ff6467' ? 'text-red-400' :
+                                                            matter?.color === '#05df72' ? 'text-green-400' :
+                                                                matter?.color === '#50a2ff' ? 'text-blue-400' :
+                                                                    matter?.color === '#ff8904' ? 'text-orange-400' : 'text-purple-400'
+                                                            }`} />
                                                     </div>
                                                     <span className="text-sm truncate flex-1 group-hover:text-primary transition-colors">{file.name}</span>
                                                 </a>
@@ -580,7 +598,7 @@ const MatterItem = ({ matter }) => {
 const MatterPage = () => {
     const { isAuthenticated } = useAuthStore()
     const { matters, fetchMatters } = useMatterStore()
-    
+
     const [title, setTitle] = useState('')
     const [selectedColor, setSelectedColor] = useState('#ff6467')
 
@@ -594,14 +612,14 @@ const MatterPage = () => {
 
     useEffect(() => {
         if (isAuthenticated) {
-            fetchMatters(false) 
+            fetchMatters(false)
         }
     }, [isAuthenticated, fetchMatters])
 
     const handleCreateMatter = async (e) => {
         e.preventDefault()
         try {
-            const response = await axios.post(API_URL+"/matter/create-matter", { title, color: selectedColor }, { withCredentials: true })
+            const response = await axios.post(API_URL + "/matter/create-matter", { title, color: selectedColor }, { withCredentials: true })
             if (response.data.success) {
                 toast.success("Matéria criada com sucesso!")
                 setTitle('')
@@ -620,7 +638,7 @@ const MatterPage = () => {
                 <p className='font-medium'>◉ Gerencie suas matérias e assuntos</p>
                 {isAuthenticated ? (
                     <button className='btn' title='Adicionar nova Matéria' onClick={() => document.getElementById('create_matter_modal').showModal()}>
-                        <Plus /> Nova Materia  
+                        <Plus /> Nova Materia
                     </button>
                 ) : (
                     <Link to="/login" className="btn btn-soft btn-sm">Faça login para adicionar</Link>
