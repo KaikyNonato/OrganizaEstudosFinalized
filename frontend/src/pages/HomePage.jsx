@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useAuthStore } from '../store/authStore'
-import { BookOpenText, CircleCheck, Clock, ListTodo, TrendingUp, Plus, X } from 'lucide-react'
+import { BookOpenText, CircleCheck, Clock, ListTodo, TrendingUp, Plus, X, Link2 } from 'lucide-react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { API_URL } from '../../API_URL'
@@ -13,14 +13,13 @@ const HomePage = () => {
     const [pendingCount, setPendingCount] = useState(0)
     const [completedCount, setCompletedCount] = useState(0)
     const [todaysSchedule, setTodaysSchedule] = useState([])
-    const [studiedTime, setStudiedTime] = useState(0) // Em minutos
+    const [studiedTime, setStudiedTime] = useState(0) 
 
     // ESTADOS PARA OS LINKS RÁPIDOS
     const [links, setLinks] = useState(user?.quickLinks || [])
     const [newLinkName, setNewLinkName] = useState('')
     const [newLinkUrl, setNewLinkUrl] = useState('')
 
-    // Sincroniza os links locais com os dados do usuário vindos do Zustand
     useEffect(() => {
         if (user?.quickLinks) {
             setLinks(user.quickLinks);
@@ -32,7 +31,6 @@ const HomePage = () => {
 
         const fetchData = async () => {
             try {
-                // Executa as chamadas em paralelo para mais eficiência
                 const [mattersResponse, subjectsResponse, timelineResponse, studyTimeResponse] = await Promise.all([
                     axios.get(API_URL + "/matter/get-matters", { withCredentials: true }),
                     axios.get(API_URL + "/subject/get-subjects", { withCredentials: true }),
@@ -40,12 +38,10 @@ const HomePage = () => {
                     axios.get(API_URL + "/user/get-study-time", { withCredentials: true })
                 ]);
 
-                // Processa a resposta das matérias
                 if (mattersResponse.data.success) {
                     setMattersCount(mattersResponse.data.matters.length);
                 }
 
-                // Processa a resposta dos assuntos
                 if (subjectsResponse.data.success) {
                     const subjects = subjectsResponse.data.subjects;
                     let pending = 0;
@@ -63,7 +59,6 @@ const HomePage = () => {
                     setCompletedCount(completed);
                 }
 
-                // Processa a resposta do cronograma
                 if (timelineResponse.data.success) {
                     const todayIndex = new Date().getDay();
                     const todayString = daysOfWeek[todayIndex];
@@ -93,12 +88,10 @@ const HomePage = () => {
         return `${h}h ${m}m`;
     };
 
-    // FUNÇÕES DE GERENCIAMENTO DE LINKS
     const handleAddLink = async (e) => {
         e.preventDefault();
         if (links.length >= 5) return toast.error("Limite máximo de 5 links atingido.");
         
-        // Garante que o link possui http/https
         let formattedUrl = newLinkUrl;
         if (!/^https?:\/\//i.test(formattedUrl)) {
             formattedUrl = 'https://' + formattedUrl;
@@ -113,7 +106,7 @@ const HomePage = () => {
                 setNewLinkName('');
                 setNewLinkUrl('');
                 document.getElementById('add_link_modal').close();
-                checkAuth(); // Atualiza o Zustand com os novos dados do usuário
+                checkAuth(); 
                 toast.success("Link adicionado!");
             }
         } catch (error) {
@@ -127,7 +120,7 @@ const HomePage = () => {
             const response = await axios.put(API_URL + "/user/update-user", { quickLinks: updatedLinks }, { withCredentials: true });
             if(response.data.success) {
                 setLinks(updatedLinks);
-                checkAuth(); // Atualiza o Zustand
+                checkAuth(); 
                 toast.success("Link removido!");
             }
         } catch (error) {
@@ -137,11 +130,11 @@ const HomePage = () => {
 
     return (
         <div className='flex flex-col gap-6'>
-            <div className='flex justify-between items-center'>
-                <h3 className='font-medium'>◉ Visão geral dos seus estudos</h3>
+            <div className='flex justify-between items-center gap-2'>
+                <h3 className='font-medium min-w-0 truncate'>◉ Visão geral dos seus estudos</h3>
                 
-                {/* ÁREA DOS LINKS ATUALIZADA */}
-                <div className='flex gap-3 items-center'>
+                {/* VERSÃO DESKTOP: LINKS EM BOLINHAS */}
+                <div className='hidden md:flex gap-3 items-center shrink-0'>
                     {links.map((link, idx) => (
                         <div key={idx} className="relative group">
                             <a 
@@ -153,7 +146,6 @@ const HomePage = () => {
                             >
                                 {link.name.charAt(0)}
                             </a>
-                            {/* Botão de excluir que aparece no hover */}
                             <button 
                                 onClick={() => handleDeleteLink(idx)}
                                 className="absolute -top-1 -right-1 bg-error text-white rounded-full w-4 h-4 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
@@ -164,7 +156,6 @@ const HomePage = () => {
                         </div>
                     ))}
                     
-                    {/* Botão de adicionar aparece apenas se houver menos de 5 links */}
                     {links.length < 5 && (
                         <button 
                             onClick={() => document.getElementById('add_link_modal').showModal()} 
@@ -175,10 +166,20 @@ const HomePage = () => {
                         </button>
                     )}
                 </div>
+
+                {/* VERSÃO MOBILE: BOTÃO PARA ABRIR MODAL */}
+                <div className='md:hidden shrink-0'>
+                    <button 
+                        onClick={() => document.getElementById('mobile_links_modal').showModal()}
+                        className='btn btn-sm btn-ghost border border-base-content/20 rounded-full text-xs font-medium'
+                    >
+                        <Link2 size={14} /> Links
+                    </button>
+                </div>
             </div>
             
             <div className='flex flex-col gap-3'>
-                <div className='grid grid-cols-1 md:grid-cols-4 gap-4 '>
+                <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 '>
                     <div className='flex flex-col gap-3  border border-base-content/20 p-6 rounded-lg shadow-md'>
                         <div className='flex items-center justify-between'>
                             <span className='font-bold'>Matérias</span>
@@ -208,14 +209,14 @@ const HomePage = () => {
                         <span className='text-4xl'>{formatStudyTime(studiedTime)}</span>
                     </div>
                 </div>
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
+                <div className='grid grid-cols-1 lg:grid-cols-2 gap-3'>
                     <div className='flex flex-col gap-3 border border-base-content/20 p-6 rounded-lg shadow-md'>
                         <div className='flex items-center justify-between'>
-                            <span className='font-bold text-2xl'>Progresso Geral</span>
+                            <span className='font-bold text-xl sm:text-2xl'>Progresso Geral</span>
                             <TrendingUp size={20} ></TrendingUp>
                         </div>
                         <progress className="progress w-full h-3.5" value={(pendingCount + completedCount) > 0 ? (completedCount / (pendingCount + completedCount) * 100) : 0} max="100"></progress>
-                        <span>{(pendingCount + completedCount) > 0 ? (completedCount / (pendingCount + completedCount) * 100).toFixed(1) : 0}% dos assuntos foram concluídos</span>
+                        <span className="text-sm">{(pendingCount + completedCount) > 0 ? (completedCount / (pendingCount + completedCount) * 100).toFixed(1) : 0}% dos assuntos foram concluídos</span>
                     </div>
                     <div className='flex flex-col gap-3 border border-base-content/20 p-6 rounded-lg shadow-md'>
                         <div className='flex items-center justify-between'>
@@ -233,7 +234,7 @@ const HomePage = () => {
                                                         item.matter_id?.color === '#ff8904' ? 'bg-orange-400' :
                                                             'bg-purple-400'
                                                 }`}></div>
-                                            <span className='font-medium text-sm truncate max-w-[120px]'>{item.matter_id?.title}</span>
+                                            <span className='font-medium text-sm truncate max-w-[120px] sm:max-w-[200px]'>{item.matter_id?.title}</span>
                                         </div>
                                         <span className='text-xs font-mono opacity-70'>{item.startTime} - {item.endTime}</span>
                                     </div>
@@ -284,6 +285,64 @@ const HomePage = () => {
                     <button>close</button>
                 </form>
             </dialog>
+
+            {/* MODAL DE LINKS PARA MOBILE */}
+            <dialog id="mobile_links_modal" className="modal modal-bottom sm:modal-middle">
+                <div className="modal-box">
+                    <h3 className="font-bold text-lg mb-4">Meus Links Rápidos</h3>
+                    
+                    <div className="flex flex-col gap-2">
+                        {links.length === 0 ? (
+                            <p className="text-sm text-base-content/60 italic text-center py-4">Nenhum link adicionado.</p>
+                        ) : (
+                            links.map((link, idx) => (
+                                <div key={idx} className="flex justify-between items-center bg-base-200 p-2.5 rounded-lg">
+                                    <a 
+                                        href={link.url} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-3 flex-1 overflow-hidden hover:text-primary transition-colors"
+                                    >
+                                        <div className="bg-base-100 border border-base-content/10 rounded-full w-8 h-8 flex items-center justify-center font-bold uppercase text-xs shrink-0">
+                                            {link.name.charAt(0)}
+                                        </div>
+                                        <span className="font-medium truncate text-sm">{link.name}</span>
+                                    </a>
+                                    <button 
+                                        onClick={() => handleDeleteLink(idx)}
+                                        className="btn btn-sm btn-circle btn-ghost text-error"
+                                        title="Remover link"
+                                    >
+                                        <X size={16} />
+                                    </button>
+                                </div>
+                            ))
+                        )}
+                    </div>
+
+                    {links.length < 5 && (
+                        <button 
+                            onClick={() => {
+                                document.getElementById('mobile_links_modal').close();
+                                document.getElementById('add_link_modal').showModal();
+                            }} 
+                            className='btn btn-outline btn-sm w-full mt-4 border-dashed border-base-content/40 text-base-content/70'
+                        >
+                            <Plus size={16} /> Novo Link
+                        </button>
+                    )}
+
+                    <div className="modal-action">
+                        <form method="dialog" className="w-full">
+                            <button className="btn w-full">Fechar</button>
+                        </form>
+                    </div>
+                </div>
+                <form method="dialog" className="modal-backdrop">
+                    <button>close</button>
+                </form>
+            </dialog>
+
         </div>
     )
 }
