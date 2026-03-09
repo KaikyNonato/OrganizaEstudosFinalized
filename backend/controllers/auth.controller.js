@@ -22,7 +22,8 @@ export const checkAuth = async (req, res) => {
                 isVerified: user.isVerified,
                 lastLogin: user.lastLogin,
                 createdAt: user.createdAt,
-                isAdmin: user.isAdmin
+                isAdmin: user.isAdmin,
+                quickLinks: user.quickLinks
             }
         });
 
@@ -72,7 +73,8 @@ export const signup = async (req, res) => {
                 _id: user._id,
                 name: user.name,
                 email: user.email,
-                isAdmin: user.isAdmin
+                isAdmin: user.isAdmin,
+                quickLinks: user.quickLinks
                 
             }
         });
@@ -149,7 +151,8 @@ export const login = async (req, res) => {
                 email: user.email,
                 lastLogin: user.lastLogin,
                 isVerified: user.isVerified,
-                isAdmin: user.isAdmin
+                isAdmin: user.isAdmin,
+                quickLinks: user.quickLinks
                 
             }
         });
