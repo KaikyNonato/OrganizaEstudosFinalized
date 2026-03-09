@@ -30,6 +30,7 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    quickLinks: [{ name: String, url: String }],
     resetPasswordtoken: String,
     resetPasswordexpiresAt: Date,
     verificationToken: String,
