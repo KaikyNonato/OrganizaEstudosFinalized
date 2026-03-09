@@ -38,7 +38,7 @@ export const useMatterStore = create((set, get) => ({
                 set((state) => ({
                     subjectsByMatter: {
                         ...state.subjectsByMatter,
-                        [matterId]: response.data.subjects.sort((a, b) => (a.order || 0) - (b.order || 0))
+                        [matterId]: response.data.subjects.sort((a, b) => (a.order || 0) - (b.order || 0) || new Date(a.createdAt) - new Date(b.createdAt))
                     },
                     // A MÁGICA ACONTECE AQUI: 
                     // Se forçamos a busca (force = true) porque mudamos o status para CONCLUÍDO,
