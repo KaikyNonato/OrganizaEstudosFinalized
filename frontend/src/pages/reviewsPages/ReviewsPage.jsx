@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
-import { Clock, CircleCheck, FileText } from 'lucide-react'
+import { Clock, CircleCheck, FileText, Paperclip } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { API_URL } from '../../../API_URL'
 import { useAuthStore } from '../../store/authStore'
@@ -9,7 +9,7 @@ import { useMatterStore } from '../../store/matterStore' // <-- Importando o Zus
 const Countdown = ({ targetDate, textSize = "text-sm" }) => {
     const [timeLeft, setTimeLeft] = useState("");
     const [isLate, setIsLate] = useState(false);
-    
+
     useEffect(() => {
         const updateTimer = () => {
             const now = new Date();
@@ -67,18 +67,18 @@ const ReviewsPage = () => {
     useEffect(() => {
         if (isAuthenticated) {
             // false = Usa o cache se já tiver os dados, evita loading extra
-            fetchAllSubjects(false) 
+            fetchAllSubjects(false)
         }
     }, [isAuthenticated, fetchAllSubjects])
 
     const handleConclude = async (id, review) => {
         try {
             // Nota: enviando body vazio {} pois é um PUT, e a config de credenciais no 3º argumento
-            const response = await axios.put(API_URL+`/subject/concluded-review/${id}/${review}`, {}, { withCredentials: true })
+            const response = await axios.put(API_URL + `/subject/concluded-review/${id}/${review}`, {}, { withCredentials: true })
             if (response.data.success) {
                 toast.success("Revisão concluída")
                 // true = Força a buscar na API novamente para atualizar as revisões concluídas
-                fetchAllSubjects(true) 
+                fetchAllSubjects(true)
             }
         } catch (error) {
             console.error("Erro ao concluir revisão:", error)
@@ -107,7 +107,7 @@ const ReviewsPage = () => {
         <div className='flex flex-col gap-6'>
             <p className='font-medium'>◉ Revisões espaçadas de 24h, 7 e 30 dias</p>
             <div className='flex flex-col gap-6'>
-                
+
                 {/* --- 24 HORAS --- */}
                 <div className='border border-base-content/20 p-6 rounded-lg flex flex-col gap-2 shadow-md'>
                     <div className='font-bold  text-lg flex items-center gap-2'>
@@ -133,7 +133,7 @@ const ReviewsPage = () => {
                                     <Countdown targetDate={subject.review1} textSize="text-xs" />
                                 </div>
                                 {isAuthenticated && (
-                                    <button onClick={(e) => { e.stopPropagation(); handleConclude(subject._id, "review1") }} className='btn btn-soft btn-sm'><CircleCheck size={15}/>Feito</button>
+                                    <button onClick={(e) => { e.stopPropagation(); handleConclude(subject._id, "review1") }} className='btn btn-soft btn-sm'><CircleCheck size={15} />Feito</button>
                                 )}
                             </div>
                         </div>
@@ -150,7 +150,7 @@ const ReviewsPage = () => {
                         {subjects.filter(subject => subject.review2 && !subject.review2_concluded).length === 0 ? (
                             <span className='text-sm text-base-content/60'>Nenhuma revisão cadastrada</span>
                         ) : (subjects.filter(subject => subject.review2 && !subject.review2_concluded).sort((a, b) => new Date(a.review2) - new Date(b.review2)).map(subject => (
-                        <div className={`border rounded-lg p-2 flex justify-between items-center gap-2 cursor-pointer hover:bg-base-200/50 hover:shadow-md transition-shadow ${checkIsToday(subject.review2) ? 'border-green-400' : checkIsLate(subject.review2) ? 'border-red-400' : 'border-base-content/20'}`} key={subject._id} onClick={() => openSubjectModal(subject)}>
+                            <div className={`border rounded-lg p-2 flex justify-between items-center gap-2 cursor-pointer hover:bg-base-200/50 hover:shadow-md transition-shadow ${checkIsToday(subject.review2) ? 'border-green-400' : checkIsLate(subject.review2) ? 'border-red-400' : 'border-base-content/20'}`} key={subject._id} onClick={() => openSubjectModal(subject)}>
                                 <div className='flex items-center gap-2  min-w-0'>
                                     <div className={`rounded-full min-w-4 min-h-4 text-white ${subject.matter_id?.color === '#ff6467' ? 'bg-red-400' : subject.matter_id?.color === '#05df72' ? 'bg-green-400' : subject.matter_id?.color === '#50a2ff' ? 'bg-blue-400' : subject.matter_id?.color === '#ff8904' ? 'bg-orange-400' : 'bg-purple-400'}`}>
                                     </div>
@@ -182,7 +182,7 @@ const ReviewsPage = () => {
                         {subjects.filter(subject => subject.review3 && !subject.review3_concluded).length === 0 ? (
                             <span className='text-sm text-base-content/60'>Nenhuma revisão cadastrada</span>
                         ) : (subjects.filter(subject => subject.review3 && !subject.review3_concluded).sort((a, b) => new Date(a.review3) - new Date(b.review3)).map(subject => (
-                        <div className={`border rounded-lg p-2 flex justify-between items-center gap-2 cursor-pointer hover:bg-base-200/50 hover:shadow-md transition-shadow ${checkIsToday(subject.review3) ? 'border-green-400' : checkIsLate(subject.review3) ? 'border-red-400' : 'border-base-content/20'}`} key={subject._id} onClick={() => openSubjectModal(subject)}>
+                            <div className={`border rounded-lg p-2 flex justify-between items-center gap-2 cursor-pointer hover:bg-base-200/50 hover:shadow-md transition-shadow ${checkIsToday(subject.review3) ? 'border-green-400' : checkIsLate(subject.review3) ? 'border-red-400' : 'border-base-content/20'}`} key={subject._id} onClick={() => openSubjectModal(subject)}>
                                 <div className='flex items-center gap-2 min-w-0'>
                                     <div className={`rounded-full min-w-4 min-h-4 text-white ${subject.matter_id?.color === '#ff6467' ? 'bg-red-400' : subject.matter_id?.color === '#05df72' ? 'bg-green-400' : subject.matter_id?.color === '#50a2ff' ? 'bg-blue-400' : subject.matter_id?.color === '#ff8904' ? 'bg-orange-400' : 'bg-purple-400'}`}>
                                     </div>
@@ -260,48 +260,65 @@ const ReviewsPage = () => {
 
                                 <div className="flex items-center gap-2">
                                     <span className="font-semibold text-sm">Status:</span>
-                                    <span className={`badge badge-sm ${selectedSubject.status === 'CONCLUIDO' ? 'badge-success text-white' : 'badge-ghost'}`}>
-                                        {selectedSubject.status || 'PENDENTE'}
+                                    <span className={`badge badge-sm flex gap-1  ${selectedSubject.status === 'CONCLUIDO' ? 'badge-success text-white' : 'badge-ghost'}`}>
+                                        <CircleCheck className='min-w-3' size={12}></CircleCheck>
+                                        CONCLUÍDO
+                                        {/* {selectedSubject.status || 'PENDENTE'} */}
                                     </span>
                                 </div>
 
-                                {selectedSubject.attachments && selectedSubject.attachments.length > 0 && (
+                                <div className="bg-base-200/50 flex flex-col gap-1 text-center border border-base-content/20 p-3 rounded-lg">
+                                    <span className='text-start font-semibold text-sm opacity-70'>Cronograma de Revisões:</span>
+                                    <div className={`flex justify-between gap-3   ${selectedSubject.review1_concluded ? 'text-green-400 line-through' : checkIsLate(selectedSubject.review1) ? 'text-red-400 line-through' : ''}`}>
+                                        <span className="text-xs font-bold">1ª Revisão (24h):</span>
+                                        <span className=" font-mono">{new Date(selectedSubject.review1).toLocaleDateString()}</span>
+                                    </div>
+
+                                    <div className={`flex justify-between gap-3   ${selectedSubject.review2_concluded ? 'text-green-400 line-through ' : checkIsLate(selectedSubject.review2) ? 'text-red-400 line-through' : ''}`}>
+                                        <span className="text-xs font-bold">2ª Revisão (7 dias):</span>
+                                        <span className=" font-mono">{new Date(selectedSubject.review2).toLocaleDateString()}</span>
+                                    </div>
+                                    <div className={`flex justify-between gap-3    ${selectedSubject.review3_concluded ? 'text-green-400 line-through' : checkIsLate(selectedSubject.review3) ? 'text-red-400 line-through' : ''}`}>
+                                        <span className="text-xs font-bold">3ª Revisão (30 dias):</span>
+                                        <span className="font-mono">{new Date(selectedSubject.review3).toLocaleDateString()}</span>
+                                    </div>
+                                </div>
+
+                                {selectedSubject.attachments && selectedSubject.attachments.length > 0 ? (
                                     <div className="flex flex-col gap-2">
-                                        <span className="font-semibold text-sm">Anexos:</span>
+                                        <div className='flex gap-1 text-sm '>
+                                            <span className="font-semibold text-sm flex items-center gap-2 min-w-3"><Paperclip size={16}></Paperclip> Anexos</span>
+                                            ({selectedSubject.attachments.length})
+                                        </div>
+
                                         <div className="flex flex-col gap-2">
                                             {selectedSubject.attachments.map((file, idx) => (
                                                 <a key={idx} href={file.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2 border border-base-content/20 rounded hover:bg-base-200 transition-colors text-sm">
                                                     <FileText size={16}
-                                                        className={` min-w-[20px]  ${
-                                                            selectedSubject.matter_id?.color === '#ff6467' ? 'text-red-400' :
+                                                        className={` min-w-[20px]  ${selectedSubject.matter_id?.color === '#ff6467' ? 'text-red-400' :
                                                             selectedSubject.matter_id?.color === '#05df72' ? 'text-green-400' :
-                                                            selectedSubject.matter_id?.color === '#50a2ff' ? 'text-blue-400' :
-                                                            selectedSubject.matter_id?.color === '#ff8904' ? 'text-orange-400' :'text-purple-400'
+                                                                selectedSubject.matter_id?.color === '#50a2ff' ? 'text-blue-400' :
+                                                                    selectedSubject.matter_id?.color === '#ff8904' ? 'text-orange-400' : 'text-purple-400'
                                                             }`} />
                                                     <span className="truncate">{file.name}</span>
                                                 </a>
                                             ))}
                                         </div>
                                     </div>
+                                ) : (
+                                    <div>
+                                        <div className='flex gap-1 text-sm '>
+                                            <span className="font-semibold text-sm flex items-center gap-2 min-w-3"><Paperclip size={16}></Paperclip> Anexos</span>
+                                            ({selectedSubject.attachments.length})
+                                        </div>
+                                        <div className="text-sm text-base-content/50 italic bg-base-200/30 p-2 rounded text-center">
+                                            Nenhum arquivo anexado.
+                                        </div>
+                                    </div>
                                 )}
 
-                                <span className="font-semibold text-sm divider my-2">Revisões</span>
 
-                                <div className="grid grid-cols-3 gap-2 text-center">
-                                    <div className={`flex flex-col p-2 rounded border border-base-content/20 ${selectedSubject.review1_concluded ? 'bg-green-400 text-black border-green-600' : checkIsLate(selectedSubject.review1) ? 'bg-red-400 text-black border-red-600' : 'bg-base-100'}`}>
-                                        <span className="text-xs font-bold">24 Horas</span>
-                                        <span className="text-xs">{new Date(selectedSubject.review1).toLocaleDateString()}</span>
-                                    </div>
 
-                                    <div className={`flex flex-col p-2 rounded border border-base-content/20 ${selectedSubject.review2_concluded ? 'bg-green-400 text-black border-green-600 ' : checkIsLate(selectedSubject.review2) ? 'bg-red-400 text-black border-red-600/30' : 'bg-base-100'}`}>
-                                        <span className="text-xs font-bold">7 Dias</span>
-                                        <span className="text-xs">{new Date(selectedSubject.review2).toLocaleDateString()}</span>
-                                    </div>
-                                    <div className={`flex flex-col p-2 rounded border border-base-content/20 ${selectedSubject.review3_concluded ? 'bg-green-400 text-black border-green-600' : checkIsLate(selectedSubject.review3) ? 'bg-red-400 text-black border-red-600' : 'bg-base-100'}`}>
-                                        <span className="text-xs font-bold">30 Dias</span>
-                                        <span className="text-xs">{new Date(selectedSubject.review3).toLocaleDateString()}</span>
-                                    </div>
-                                </div>
                             </div>
 
                             <div className="modal-action">
