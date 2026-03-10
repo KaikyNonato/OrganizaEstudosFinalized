@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Plus, Trash, Paperclip, PencilLine, ArrowUp, ArrowDown, FileText, CircleCheck, CircleX, ChevronDown, ChevronUp } from 'lucide-react'
+import { Plus, Trash, Paperclip, PencilLine, ArrowUp, ArrowDown, FileText, CircleCheck, CircleX, ChevronDown, ChevronUp, Loader } from 'lucide-react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -75,40 +75,46 @@ const MatterItem = ({ matter }) => {
         e.target.value = '';
     }
 
+    const [deletingFileId, setDeletingFileId] = useState(null)
     const handleDeleteFile = async (subjectId, publicId) => {
-        const toastId = toast.loading("Removendo arquivo...");
+        setDeletingFileId(publicId)
 
         try {
             const response = await axios.put(API_URL + `/subject/remove-file/${subjectId}`, {
                 public_id: publicId
             }, { withCredentials: true });
             if (response.data.success) {
-                toast.success("Arquivo removido!", { id: toastId });
-                fetchSubjects(matter._id, true);
+                toast.success("Arquivo removido!");
+                await fetchSubjects(matter._id, true);
             }
         } catch (error) {
-            toast.error("Erro ao remover arquivo", { id: toastId });
+            toast.error("Erro ao remover arquivo");
+        } finally {
+            setDeletingFileId(null)
         }
     }
 
+    const [isCreatingSubject, setIsCreatingSubject] = useState(false)
     const handleCreateSubject = async () => {
         if (!subjectTitle) return;
 
-        const toastId = toast.loading("Criando assunto...")
-
+        setIsCreatingSubject(true)
         try {
+
             const response = await axios.post(API_URL + "/subject/create-subject", {
                 title: subjectTitle,
                 matter_id: matter._id
             }, { withCredentials: true })
             if (response.data.success) {
-                toast.success("Assunto criado com sucesso!", { id: toastId })
+                toast.success("Assunto criado com sucesso!")
                 setSubjectTitle('')
                 fetchSubjects(matter._id, true)
                 setIsExpanded(true)
             }
         } catch (error) {
-            toast.error(error.response?.data?.message || error.message || "Erro ao criar assunto", { id: toastId })
+            toast.error(error.response?.data?.message || error.message || "Erro ao criar assunto")
+        } finally {
+            setIsCreatingSubject(false)
         }
     }
 
@@ -123,9 +129,12 @@ const MatterItem = ({ matter }) => {
         document.getElementById(`edit_matter_modal_${matter._id}`).showModal()
     }
 
+
+    const [isUpdatingSubject, setIsUpdatingSubject] = useState(false)
     const handleUpdateMatter = async (e) => {
         e.preventDefault()
-        const toastId = toast.loading("Atualizando matéria...")
+
+        setIsUpdatingSubject(true)
 
         try {
             const response = await axios.put(API_URL + `/matter/update-matter/${matter._id}`, {
@@ -133,26 +142,32 @@ const MatterItem = ({ matter }) => {
                 color: editColorMatter
             }, { withCredentials: true })
             if (response.data.success) {
-                toast.success("Matéria atualizada!", { id: toastId })
+                toast.success("Matéria atualizada!")
                 fetchMatters(true)
                 document.getElementById(`edit_matter_modal_${matter._id}`).close()
             }
         } catch (error) {
-            toast.error("Erro ao atualizar matéria", { id: toastId })
+            toast.error("Erro ao atualizar matéria")
+        } finally {
+            setIsUpdatingSubject(false)
         }
     }
 
+
+    const [isDeletingSubject, setIsDeletingSubject] = useState(false)
     const handleDeleteSubject = async (subjectId) => {
-        const toastId = toast.loading("Deletando assunto...")
+        setIsDeletingSubject(true)
 
         try {
             const response = await axios.delete(API_URL + `/subject/delete-subject/${subjectId}`, { withCredentials: true })
             if (response.data.success) {
-                toast.success("Assunto deletado com sucesso!", { id: toastId })
+                toast.success("Assunto deletado com sucesso!")
                 fetchSubjects(matter._id, true)
             }
         } catch (error) {
-            toast.error(error.response?.data?.message || "Erro ao deletar assunto", { id: toastId })
+            toast.error(error.response?.data?.message || "Erro ao deletar assunto")
+        } finally {
+            setIsDeletingSubject(false)
         }
     }
 
@@ -186,10 +201,11 @@ const MatterItem = ({ matter }) => {
     }
 
     // NOVO: Função atualizada para enviar datas e título
+    const [isSavingSubject, setIsSavingSubject] = useState(false)
     const handleUpdateSubject = async () => {
-        const toastId = toast.loading("Editando assunto...")
         if (!editingSubject || !editTitle.trim()) return
 
+        setIsSavingSubject(true)
         const payload = { title: editTitle }
 
         // Recalcula as datas se o usuário alterou a data da primeira revisão
@@ -213,12 +229,14 @@ const MatterItem = ({ matter }) => {
         try {
             const response = await axios.put(API_URL + `/subject/update-subject/${editingSubject._id}`, payload, { withCredentials: true })
             if (response.data.success) {
-                toast.success("Assunto atualizado!", { id: toastId })
+                toast.success("Assunto atualizado!")
                 fetchSubjects(matter._id, true)
                 document.getElementById(`edit_subject_modal_${matter._id}`).close()
             }
         } catch (error) {
-            toast.error("Erro ao atualizar assunto", { id: toastId })
+            toast.error("Erro ao atualizar assunto")
+        } finally {
+            setIsSavingSubject(false)
         }
     }
 
@@ -247,17 +265,24 @@ const MatterItem = ({ matter }) => {
             fetchSubjects(matter._id, true)
         }
     }
-
+    const [isDeletingMatter, setIsDeletingMatter] = useState(false)
     const handleDeleteMatter = async () => {
-        const toastId = toast.loading("Deletando matéria...")
+        setIsDeletingMatter(true)
+        const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        // Em uma função async
+        await delay(1000); // Espera 1 segundo antes de prosseguir
+
         try {
             const response = await axios.delete(API_URL + `/matter/delete-matter/${matter._id}`, { withCredentials: true })
             if (response.data.success) {
-                toast.success("Matéria deletada com sucesso!", { id: toastId })
+                toast.success("Matéria deletada com sucesso!")
                 fetchMatters(true)
             }
         } catch (error) {
-            toast.error(error.response?.data?.message || "Erro ao deletar matéria", { id: toastId })
+            toast.error(error.response?.data?.message || "Erro ao deletar matéria")
+        } finally {
+            setIsDeletingMatter(false)
         }
     }
 
@@ -284,7 +309,7 @@ const MatterItem = ({ matter }) => {
 
                 <div className='flex gap-2 ml-4'>
                     <button onClick={openEditMatterModal} className='btn btn-sm btn-ghost hover:bg-transparent hover:border-transparent hover:shadow-none p-0 '><PencilLine className={`  ${matter.color === '#ff6467' ? 'hover:text-red-400' : matter.color === '#05df72' ? 'hover:text-green-400' : matter.color === '#50a2ff' ? 'hover:text-blue-400' : matter.color === '#ff8904' ? 'hover:text-orange-400' : 'hover:text-purple-400'}`} size={15}></PencilLine></button>
-                    <button onClick={handleDeleteMatter} className='btn btn-sm btn-ghost hover:bg-transparent hover:border-transparent hover:shadow-none p-0' title='Deletar Matéria'><Trash className=' hover:text-red-400' size={15}></Trash></button>
+                    <button disabled={isDeletingMatter} onClick={handleDeleteMatter} className='btn btn-sm btn-ghost hover:bg-transparent hover:border-transparent hover:shadow-none p-0' title='Deletar Matéria'>{isDeletingMatter ? <Loader size={15} className="animate-spin" /> : <Trash className='hover:text-red-400' size={15}></Trash>}</button>
                 </div>
             </div>
 
@@ -346,9 +371,11 @@ const MatterItem = ({ matter }) => {
                                                     <button onClick={() => openEditModal(subject)} className='btn btn-sm btn-ghost hover:bg-transparent hover:border-transparent hover:shadow-none p-0'>
                                                         <PencilLine className={`${matter.color === '#ff6467' ? 'hover:text-red-400' : matter.color === '#05df72' ? 'hover:text-green-400' : matter.color === '#50a2ff' ? 'hover:text-blue-400' : matter.color === '#ff8904' ? 'hover:text-orange-400' : 'hover:text-purple-400'}`} size={15}></PencilLine>
                                                     </button>
-                                                    <button onClick={() => handleDeleteSubject(subject._id)} className='btn btn-sm btn-ghost pl-0 hover:bg-transparent hover:border-transparent hover:shadow-none' title='Deletar Assunto'>
-                                                        <Trash className='hover:text-red-400' size={15}></Trash>
+
+                                                    <button disabled={isDeletingSubject} onClick={() => handleDeleteSubject(subject._id)} className='btn btn-sm btn-ghost pl-0 hover:bg-transparent hover:border-transparent hover:shadow-none' title='Deletar Assunto'>
+                                                        {isDeletingSubject ? <Loader size={15} className="animate-spin" /> : <Trash className='hover:text-red-400 ' size={15}></Trash>}
                                                     </button>
+
                                                 </div>
                                             </div>
                                         </div>
@@ -381,8 +408,8 @@ const MatterItem = ({ matter }) => {
                                                                                 <FileText className={`min-w-[20px] ${matter.color === '#ff6467' ? 'text-red-400' : matter.color === '#05df72' ? 'text-green-400' : matter.color === '#50a2ff' ? 'text-blue-400' : matter.color === '#ff8904' ? 'text-orange-400' : 'text-purple-400'}`} size={15}></FileText>
                                                                                 {file.name}
                                                                             </div>
-                                                                            <button onClick={(e) => { e.preventDefault(); handleDeleteFile(subject._id, file.public_id); }} className='text-base-content hover:text-red-400 p-1'>
-                                                                                <Trash size={15} />
+                                                                            <button disabled={deletingFileId !== null} onClick={(e) => { e.preventDefault(); handleDeleteFile(subject._id, file.public_id); }} className='text-base-content  p-1'>
+                                                                                {deletingFileId === file.public_id ? <Loader size={15} className="animate-spin" /> : <Trash className='hover:text-red-400' size={15} />}
                                                                             </button>
                                                                         </div>
                                                                     </a>
@@ -399,15 +426,17 @@ const MatterItem = ({ matter }) => {
                                 <span className='text-xs text-base-content/50 italic mb-2 mt-1'>Nenhum assunto cadastrado.</span>
                             )}
 
-                            <div className='flex items-center justify-between gap-2 mt-1'>
+                            <div className='flex items-center justify-between gap-2 mt-1 p-[4px]'>
                                 <input
                                     placeholder='Novo assunto'
-                                    className='input-sm input w-full bg-base-200 focus:bg-base-100'
+                                    className='input-sm input w-full bg-base-200 focus:bg-base-100 '
                                     type="text"
                                     value={subjectTitle}
                                     onChange={(e) => setSubjectTitle(e.target.value)}
                                 />
-                                <button onClick={handleCreateSubject} className='btn btn-sm' title='Adicionar'><Plus size={15}></Plus></button>
+                                <button onClick={handleCreateSubject} className='btn btn-sm' title='Adicionar' disabled={isCreatingSubject}>
+                                    {isCreatingSubject ? <Loader size={15} className="animate-spin" /> : <Plus size={15} />}
+                                </button>
                             </div>
                         </div>
                     </motion.div>
@@ -494,7 +523,7 @@ const MatterItem = ({ matter }) => {
                                                     className="flex items-center gap-2 p-2 border border-base-content/20 rounded hover:bg-base-200 transition-colors text-sm"
                                                 >
                                                     <div className="bg-base-100  rounded text-primary">
-                                                        <FileText size={16}   className={` min-w-[20px]  ${matter?.color === '#ff6467' ? 'text-red-400' :
+                                                        <FileText size={16} className={` min-w-[20px]  ${matter?.color === '#ff6467' ? 'text-red-400' :
                                                             matter?.color === '#05df72' ? 'text-green-400' :
                                                                 matter?.color === '#50a2ff' ? 'text-blue-400' :
                                                                     matter?.color === '#ff8904' ? 'text-orange-400' : 'text-purple-400'
@@ -562,7 +591,9 @@ const MatterItem = ({ matter }) => {
                     </div>
                     <div className="modal-action">
                         <button className="btn" onClick={() => document.getElementById(`edit_subject_modal_${matter._id}`).close()}>Cancelar</button>
-                        <button className="btn btn-primary" onClick={handleUpdateSubject}>Salvar</button>
+                        <button disabled={isSavingSubject} className="btn btn-primary" onClick={handleUpdateSubject}>
+                            {isSavingSubject ? <Loader size={20} className="animate-spin" /> : 'Salvar'}
+                        </button>
                     </div>
                 </div>
             </dialog>
@@ -586,7 +617,7 @@ const MatterItem = ({ matter }) => {
                         </div>
                         <div className="modal-action">
                             <button type="button" className="btn" title='Cancelar' onClick={() => document.getElementById(`edit_matter_modal_${matter._id}`).close()}>Cancelar</button>
-                            <button type="submit" className="btn btn-primary " title='Salvar Matéria'>Salvar</button>
+                            <button disabled={isUpdatingSubject} type="submit" className="btn btn-primary " title='Salvar Matéria'>{isUpdatingSubject ? <Loader size={15} className="animate-spin" /> : 'Salvar'}</button>
                         </div>
                     </form>
                 </div>
@@ -601,6 +632,7 @@ const MatterPage = () => {
 
     const [title, setTitle] = useState('')
     const [selectedColor, setSelectedColor] = useState('#ff6467')
+    const [isCreatingMatter, setIsCreatingMatter] = useState(false)
 
     const colors = [
         { hex: '#ff6467', className: 'bg-red-400' },
@@ -618,6 +650,7 @@ const MatterPage = () => {
 
     const handleCreateMatter = async (e) => {
         e.preventDefault()
+        setIsCreatingMatter(true)
         try {
             const response = await axios.post(API_URL + "/matter/create-matter", { title, color: selectedColor }, { withCredentials: true })
             if (response.data.success) {
@@ -629,6 +662,8 @@ const MatterPage = () => {
             }
         } catch (error) {
             toast.error(error.response?.data?.message || error.message || "Erro ao criar matéria")
+        } finally {
+            setIsCreatingMatter(false)
         }
     }
 
@@ -664,7 +699,9 @@ const MatterPage = () => {
                         </div>
                         <div className="modal-action">
                             <button type="button" className="btn" title='Cancelar adição da Matéria' onClick={() => document.getElementById('create_matter_modal').close()}>Cancelar</button>
-                            <button type="submit" className="btn  btn-primary" title='Salvar Matéria'>Salvar</button>
+                            <button disabled={isCreatingMatter} type="submit" className="btn  btn-primary" title='Salvar Matéria'>
+                                {isCreatingMatter ? <Loader size={20} className="animate-spin" /> : 'Salvar'}
+                            </button>
                         </div>
                     </form>
                 </div>
