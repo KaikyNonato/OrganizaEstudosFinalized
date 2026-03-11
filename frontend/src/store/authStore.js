@@ -102,9 +102,8 @@ export const useAuthStore = create((set) => ({
     logout: async () => {
         set({ isLoading: true, error: null })
         try {
-            await axios.post(API_URL + "/auth/logout")
+            await api.post("/auth/logout")
             set({ user: null, isAuthenticated: false, isLoading: false })
-            // toast.success("Logged out successfully")
             useMatterStore.getState().clearMatterStore()
             useTimelineStore.getState().clearTimelineStore()
             toast.success("Até logo!")
