@@ -1,78 +1,62 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Play, Pause, RotateCcw, Brain, Coffee, Armchair, Settings } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { useAuthStore } from '../../store/authStore';
+import { usePomodoroStore } from '../../store/pomodoroStore'; // <-- Nova Store
 import { API_URL } from '../../../API_URL';
 
 const PomodoroPage = () => {
     const { isAuthenticated } = useAuthStore();
+    
+    // Conectando com a Store Global
+    const { 
+        settings, mode, timeLeft, isActive, endTime,
+        setSettings, setTimeLeft, setIsActive, setEndTime,
+        toggleTimer, resetTimer, switchMode 
+    } = usePomodoroStore();
 
-    const [settings, setSettings] = useState(() => {
-        const savedSettings = localStorage.getItem('pomodoroSettings');
-        return savedSettings ? JSON.parse(savedSettings) : {
-            pomodoro: 25,
-            shortBreak: 5,
-            longBreak: 15
-        };
-    });
-
+    // Estado temporário apenas para os inputs do modal
     const [tempSettings, setTempSettings] = useState(settings);
-    const [mode, setMode] = useState('pomodoro');
-    const [timeLeft, setTimeLeft] = useState(settings.pomodoro * 60);
-    const [isActive, setIsActive] = useState(false);
 
-    // NOVO: Uma referência que guarda a hora exata em que o timer deve acabar
-    const endTimeRef = useRef(null);
-
-    // 1. EFEITO: Cuida apenas da contagem regressiva visual
+    // Efeito Mágico: Lida com a contagem baseada na hora real do computador
     useEffect(() => {
         let interval = null;
 
-        if (isActive) {
-            // Garante que temos a hora de fim anotada
-            if (!endTimeRef.current) {
-                endTimeRef.current = Date.now() + timeLeft * 1000;
-            }
+        const tick = () => {
+            const now = Date.now();
+            const remaining = Math.round((endTime - now) / 1000);
 
-            // Roda a cada 500ms para evitar pulos visuais na tela
-            interval = setInterval(() => {
-                const now = Date.now();
-                // Calcula os segundos reais que faltam
-                const remaining = Math.round((endTimeRef.current - now) / 1000);
+            if (remaining <= 0) {
+                // O tempo acabou!
+                setTimeLeft(0);
+                setIsActive(false);
+                setEndTime(null);
+                clearInterval(interval);
 
-                if (remaining <= 0) {
-                    setTimeLeft(0);
-                    clearInterval(interval);
+                if (mode === 'pomodoro') {
+                    toast.success("Pomodoro concluído! Hora de uma pausa.", { duration: 5000, icon: '🎉' });
+                    if (isAuthenticated) {
+                        axios.post(API_URL + '/user/add-study-time', {
+                            minutes: settings.pomodoro
+                        }).catch(err => console.error("Erro ao salvar tempo", err));
+                    }
                 } else {
-                    setTimeLeft(remaining);
+                    toast.success("Pausa terminada! Vamos voltar ao foco.", { duration: 5000, icon: '💪' });
                 }
-            }, 500); 
+            } else {
+                setTimeLeft(remaining);
+            }
+        };
+
+        if (isActive && endTime) {
+            tick(); // Checa imediatamente ao montar o componente
+            interval = setInterval(tick, 500); // Roda a cada meio segundo
         }
 
         return () => clearInterval(interval);
-    }, [isActive, timeLeft]); 
-
-    // 2. EFEITO: Cuida das ações quando o tempo chega a zero
-    useEffect(() => {
-        if (timeLeft === 0 && isActive) {
-            setIsActive(false);
-            endTimeRef.current = null;
-
-            if (mode === 'pomodoro') {
-                toast.success("Pomodoro concluído! Hora de uma pausa.", { duration: 5000, icon: '🎉' });
-
-                if (isAuthenticated) {
-                    axios.post(API_URL + '/user/add-study-time', {
-                        minutes: settings.pomodoro
-                    }).catch(err => console.error("Erro ao salvar tempo de estudo", err));
-                }
-            } else {
-                toast.success("Pausa terminada! Vamos voltar ao foco.", { duration: 5000, icon: '💪' });
-            }
-        }
-    }, [timeLeft, isActive, mode, isAuthenticated, settings.pomodoro]);
+    }, [isActive, endTime, mode, isAuthenticated, settings.pomodoro, setTimeLeft, setIsActive, setEndTime]);
 
     const formatTime = (seconds) => {
         const m = Math.floor(seconds / 60);
@@ -86,32 +70,6 @@ const PomodoroPage = () => {
         return settings.longBreak * 60;
     };
 
-    const switchMode = (newMode) => {
-        setIsActive(false);
-        endTimeRef.current = null; // Limpa a referência de hora
-        setMode(newMode);
-        if (newMode === 'pomodoro') setTimeLeft(settings.pomodoro * 60);
-        if (newMode === 'shortBreak') setTimeLeft(settings.shortBreak * 60);
-        if (newMode === 'longBreak') setTimeLeft(settings.longBreak * 60);
-    };
-
-    const resetTimer = () => {
-        setIsActive(false);
-        endTimeRef.current = null; // Limpa a referência de hora
-        setTimeLeft(getTotalTime());
-    };
-
-    const toggleTimer = () => {
-        if (!isActive) {
-            // Ao dar Play, calcula exatamente que horas o timer deve apitar
-            endTimeRef.current = Date.now() + timeLeft * 1000;
-        } else {
-            // Ao pausar, remove a marcação de hora
-            endTimeRef.current = null;
-        }
-        setIsActive(!isActive);
-    };
-
     const handleSaveSettings = (e) => {
         e.preventDefault();
 
@@ -121,10 +79,8 @@ const PomodoroPage = () => {
         }
 
         setSettings(tempSettings);
-        localStorage.setItem('pomodoroSettings', JSON.stringify(tempSettings));
-
         setIsActive(false);
-        endTimeRef.current = null; // Limpa a referência de hora
+        setEndTime(null);
         
         if (mode === 'pomodoro') setTimeLeft(tempSettings.pomodoro * 60);
         if (mode === 'shortBreak') setTimeLeft(tempSettings.shortBreak * 60);
@@ -159,7 +115,8 @@ const PomodoroPage = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className='flex flex-col gap-8 items-center  justify-center min-h-[85vh] relative'
             >
-                <div className='bg-base-100 shadow-md  border border-base-content/20 rounded-lg p-8 md:p-12 w-full max-w-md flex flex-col items-center gap-10 relative overflow-hidden'>
+                <div className='bg-base-100 shadow-md border border-base-content/20 rounded-lg p-8 md:p-12 w-full max-w-md flex flex-col items-center gap-10 relative overflow-hidden'>
+
                     <button
                         onClick={() => document.getElementById('pomodoro_settings_modal').showModal()}
                         className="absolute top-6 right-6 btn btn-circle btn-ghost btn-sm text-base-content/50 hover:text-base-content z-20 max-md:top-3 max-md:right-3"
@@ -190,12 +147,7 @@ const PomodoroPage = () => {
 
                     <div className="relative flex items-center justify-center z-10">
                         <svg className="w-[280px] h-[280px] -rotate-90 transform" viewBox="0 0 280 280">
-                            <circle
-                                cx="140" cy="140" r={radius}
-                                fill="transparent"
-                                strokeWidth="12"
-                                className="stroke-base-200"
-                            />
+                            <circle cx="140" cy="140" r={radius} fill="transparent" strokeWidth="12" className="stroke-base-200" />
                             <motion.circle
                                 cx="140" cy="140" r={radius}
                                 fill="transparent"
@@ -221,11 +173,10 @@ const PomodoroPage = () => {
                     <div className='flex items-center gap-6 z-10'>
                         <button
                             onClick={toggleTimer}
-                            className={`btn btn-circle w-20 h-20 shadow-xl border-none text-white hover:scale-105 transition-all duration-300 ${isActive ? 'bg-error hover:bg-error/90' : `${theme.bg} hover:brightness-110`
-                                }`}
+                            className={`btn btn-circle w-20 h-20 shadow-xl border-none text-white hover:scale-105 transition-all duration-300 ${isActive ? 'bg-error hover:bg-error/90' : `${theme.bg} hover:brightness-110`}`}
                             title={isActive ? 'Pausar' : 'Iniciar'}
                         >
-                            {isActive ? <Pause size={32} fill="currentColor" /> : <Play size={32} fill="currentColor" className="" />}
+                            {isActive ? <Pause size={32} fill="currentColor" /> : <Play size={32} fill="currentColor" />}
                         </button>
 
                         <button
@@ -236,6 +187,7 @@ const PomodoroPage = () => {
                             <RotateCcw size={24} />
                         </button>
                     </div>
+
                 </div>
 
                 <motion.div
@@ -254,7 +206,7 @@ const PomodoroPage = () => {
                 <dialog id="pomodoro_settings_modal" className="modal">
                     <div className="modal-box max-w-sm">
                         <h3 className="font-bold text-lg mb-6 flex items-center gap-2">
-                            <Settings size={20} className="" /> Configurar Tempos
+                            <Settings size={20} /> Configurar Tempos
                         </h3>
 
                         <form onSubmit={handleSaveSettings} className="flex flex-col gap-4">
@@ -263,8 +215,7 @@ const PomodoroPage = () => {
                                     <span className="label-text font-medium flex items-center gap-2"><Brain size={16} /> Tempo de Foco (min)</span>
                                 </label>
                                 <input
-                                    type="number"
-                                    min="1" max="120"
+                                    type="number" min="1" max="120"
                                     className="input input-bordered w-full focus:border-primary"
                                     value={tempSettings.pomodoro}
                                     onChange={(e) => setTempSettings({ ...tempSettings, pomodoro: Number(e.target.value) })}
@@ -277,8 +228,7 @@ const PomodoroPage = () => {
                                     <span className="label-text font-medium flex items-center gap-2"><Coffee size={16} /> Pausa Curta (min)</span>
                                 </label>
                                 <input
-                                    type="number"
-                                    min="1" max="60"
+                                    type="number" min="1" max="60"
                                     className="input input-bordered w-full focus:border-success"
                                     value={tempSettings.shortBreak}
                                     onChange={(e) => setTempSettings({ ...tempSettings, shortBreak: Number(e.target.value) })}
@@ -291,8 +241,7 @@ const PomodoroPage = () => {
                                     <span className="label-text font-medium flex items-center gap-2"><Armchair size={16} /> Pausa Longa (min)</span>
                                 </label>
                                 <input
-                                    type="number"
-                                    min="1" max="60"
+                                    type="number" min="1" max="60"
                                     className="input input-bordered w-full focus:border-info"
                                     value={tempSettings.longBreak}
                                     onChange={(e) => setTempSettings({ ...tempSettings, longBreak: Number(e.target.value) })}
@@ -301,16 +250,10 @@ const PomodoroPage = () => {
                             </div>
 
                             <div className="modal-action mt-6">
-                                <button
-                                    type="button"
-                                    className="btn btn-ghost"
-                                    onClick={() => {
-                                        setTempSettings(settings);
-                                        document.getElementById('pomodoro_settings_modal').close();
-                                    }}
-                                >
-                                    Cancelar
-                                </button>
+                                <button type="button" className="btn btn-ghost" onClick={() => {
+                                    setTempSettings(settings);
+                                    document.getElementById('pomodoro_settings_modal').close();
+                                }}>Cancelar</button>
                                 <button type="submit" className="btn btn-primary">Salvar</button>
                             </div>
                         </form>
