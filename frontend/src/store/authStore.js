@@ -44,7 +44,6 @@ export const useAuthStore = create((set) => ({
         try {
             const response = await api.post("/auth/login", { email, password })
             set({ user: response.data.user, isAuthenticated: true, isLoading: false })
-            return response.data
 
         } catch (error) {
             set({ error: error.response.data.message || "Error logging in", isLoading: false })
