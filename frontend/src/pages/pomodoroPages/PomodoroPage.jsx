@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, RotateCcw, Brain, Coffee, Armchair, Settings } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
@@ -9,7 +9,6 @@ import { API_URL } from '../../../API_URL';
 const PomodoroPage = () => {
     const { isAuthenticated } = useAuthStore();
 
-    // Busca as configurações salvas no navegador ou usa o padrão (25, 5, 15)
     const [settings, setSettings] = useState(() => {
         const savedSettings = localStorage.getItem('pomodoroSettings');
         return savedSettings ? JSON.parse(savedSettings) : {
@@ -19,29 +18,51 @@ const PomodoroPage = () => {
         };
     });
 
-    // Estado temporário para os inputs do modal
     const [tempSettings, setTempSettings] = useState(settings);
-
-    const [mode, setMode] = useState('pomodoro'); // pomodoro, shortBreak, longBreak
+    const [mode, setMode] = useState('pomodoro');
     const [timeLeft, setTimeLeft] = useState(settings.pomodoro * 60);
     const [isActive, setIsActive] = useState(false);
 
-    // Efeito para rodar o cronômetro
+    // NOVO: Uma referência que guarda a hora exata em que o timer deve acabar
+    const endTimeRef = useRef(null);
+
+    // 1. EFEITO: Cuida apenas da contagem regressiva visual
     useEffect(() => {
         let interval = null;
 
-        if (isActive && timeLeft > 0) {
+        if (isActive) {
+            // Garante que temos a hora de fim anotada
+            if (!endTimeRef.current) {
+                endTimeRef.current = Date.now() + timeLeft * 1000;
+            }
+
+            // Roda a cada 500ms para evitar pulos visuais na tela
             interval = setInterval(() => {
-                setTimeLeft((time) => time - 1);
-            }, 1000);
-        } else if (timeLeft === 0 && isActive) {
+                const now = Date.now();
+                // Calcula os segundos reais que faltam
+                const remaining = Math.round((endTimeRef.current - now) / 1000);
+
+                if (remaining <= 0) {
+                    setTimeLeft(0);
+                    clearInterval(interval);
+                } else {
+                    setTimeLeft(remaining);
+                }
+            }, 500); 
+        }
+
+        return () => clearInterval(interval);
+    }, [isActive, timeLeft]); 
+
+    // 2. EFEITO: Cuida das ações quando o tempo chega a zero
+    useEffect(() => {
+        if (timeLeft === 0 && isActive) {
             setIsActive(false);
-            clearInterval(interval);
+            endTimeRef.current = null;
 
             if (mode === 'pomodoro') {
                 toast.success("Pomodoro concluído! Hora de uma pausa.", { duration: 5000, icon: '🎉' });
 
-                // NOVO: Salva os minutos no backend se o usuário estiver logado
                 if (isAuthenticated) {
                     axios.post(API_URL + '/user/add-study-time', {
                         minutes: settings.pomodoro
@@ -51,11 +72,8 @@ const PomodoroPage = () => {
                 toast.success("Pausa terminada! Vamos voltar ao foco.", { duration: 5000, icon: '💪' });
             }
         }
+    }, [timeLeft, isActive, mode, isAuthenticated, settings.pomodoro]);
 
-        return () => clearInterval(interval);
-    }, [isActive, timeLeft, mode]);
-
-    // Formatador de tempo (MM:SS)
     const formatTime = (seconds) => {
         const m = Math.floor(seconds / 60);
         const s = seconds % 60;
@@ -68,9 +86,9 @@ const PomodoroPage = () => {
         return settings.longBreak * 60;
     };
 
-    // Alternar entre os modos
     const switchMode = (newMode) => {
         setIsActive(false);
+        endTimeRef.current = null; // Limpa a referência de hora
         setMode(newMode);
         if (newMode === 'pomodoro') setTimeLeft(settings.pomodoro * 60);
         if (newMode === 'shortBreak') setTimeLeft(settings.shortBreak * 60);
@@ -79,16 +97,24 @@ const PomodoroPage = () => {
 
     const resetTimer = () => {
         setIsActive(false);
+        endTimeRef.current = null; // Limpa a referência de hora
         setTimeLeft(getTotalTime());
     };
 
-    const toggleTimer = () => setIsActive(!isActive);
+    const toggleTimer = () => {
+        if (!isActive) {
+            // Ao dar Play, calcula exatamente que horas o timer deve apitar
+            endTimeRef.current = Date.now() + timeLeft * 1000;
+        } else {
+            // Ao pausar, remove a marcação de hora
+            endTimeRef.current = null;
+        }
+        setIsActive(!isActive);
+    };
 
-    // Salva as novas configurações do Modal
     const handleSaveSettings = (e) => {
         e.preventDefault();
 
-        // Validação básica para não permitir tempo zero ou negativo
         if (tempSettings.pomodoro < 1 || tempSettings.shortBreak < 1 || tempSettings.longBreak < 1) {
             toast.error("O tempo deve ser de pelo menos 1 minuto.");
             return;
@@ -97,8 +123,9 @@ const PomodoroPage = () => {
         setSettings(tempSettings);
         localStorage.setItem('pomodoroSettings', JSON.stringify(tempSettings));
 
-        // Atualiza o tempo atual na tela baseado no modo ativo
         setIsActive(false);
+        endTimeRef.current = null; // Limpa a referência de hora
+        
         if (mode === 'pomodoro') setTimeLeft(tempSettings.pomodoro * 60);
         if (mode === 'shortBreak') setTimeLeft(tempSettings.shortBreak * 60);
         if (mode === 'longBreak') setTimeLeft(tempSettings.longBreak * 60);
@@ -107,7 +134,6 @@ const PomodoroPage = () => {
         toast.success("Configurações salvas!");
     };
 
-    // Cores dinâmicas e cálculos do anel de progresso SVG
     const getThemeColors = () => {
         switch (mode) {
             case 'pomodoro': return { bg: 'bg-primary', text: 'text-primary', stroke: 'stroke-primary', lightBg: 'bg-primary/10' };
@@ -124,9 +150,7 @@ const PomodoroPage = () => {
 
     return (
         <div className=''>
-
             <div className=''>
-                {/* <h2 className='text-3xl md:text-4xl font-extrabold tracking-tight'>Foco e Produtividade</h2> */}
                 <p className='font-medium '>◉ Gerencie suas sessões de estudo com a técnica Pomodoro</p>
             </div>
 
@@ -135,11 +159,7 @@ const PomodoroPage = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className='flex flex-col gap-8 items-center  justify-center min-h-[85vh] relative'
             >
-
-
                 <div className='bg-base-100 shadow-md  border border-base-content/20 rounded-lg p-8 md:p-12 w-full max-w-md flex flex-col items-center gap-10 relative overflow-hidden'>
-
-                    {/* Botão de Configurações no canto superior direito do card */}
                     <button
                         onClick={() => document.getElementById('pomodoro_settings_modal').showModal()}
                         className="absolute top-6 right-6 btn btn-circle btn-ghost btn-sm text-base-content/50 hover:text-base-content z-20 max-md:top-3 max-md:right-3"
@@ -148,11 +168,6 @@ const PomodoroPage = () => {
                         <Settings size={20} />
                     </button>
 
-                    {/* Efeito visual de fundo borrado dentro do card */}
-                    {/* <div className={`absolute -top-32 -left-32 w-64 h-64 blur-3xl rounded-full opacity-20 pointer-events-none transition-colors duration-700 ${theme.bg}`}></div>
-                    <div className={`absolute -bottom-32 -right-32 w-64 h-64 blur-3xl rounded-full opacity-20 pointer-events-none transition-colors duration-700 ${theme.bg}`}></div> */}
-
-                    {/* Seletor de Modo */}
                     <div className="bg-base-200/60 p-1.5 rounded-full flex gap-1 z-10 w-full mt-4 border border-base-content/20">
                         {[
                             { id: 'pomodoro', icon: Brain, label: 'Foco' },
@@ -173,7 +188,6 @@ const PomodoroPage = () => {
                         ))}
                     </div>
 
-                    {/* Display do Cronômetro com Anel SVG */}
                     <div className="relative flex items-center justify-center z-10">
                         <svg className="w-[280px] h-[280px] -rotate-90 transform" viewBox="0 0 280 280">
                             <circle
@@ -190,11 +204,10 @@ const PomodoroPage = () => {
                                 className={`${theme.stroke} transition-colors duration-500`}
                                 style={{ strokeDasharray: circumference }}
                                 animate={{ strokeDashoffset }}
-                                transition={{ duration: 1, ease: "linear" }}
+                                transition={{ duration: 0.5, ease: "linear" }}
                             />
                         </svg>
 
-                        {/* Texto do Tempo no centro */}
                         <div className="absolute flex flex-col items-center">
                             <span className={` select-none font-mono text-6xl md:text-7xl font-black tracking-tighter ${theme.text} transition-colors duration-500`}>
                                 {formatTime(timeLeft)}
@@ -205,7 +218,6 @@ const PomodoroPage = () => {
                         </div>
                     </div>
 
-                    {/* Controles (Play/Pause e Reset) */}
                     <div className='flex items-center gap-6 z-10'>
                         <button
                             onClick={toggleTimer}
@@ -224,10 +236,8 @@ const PomodoroPage = () => {
                             <RotateCcw size={24} />
                         </button>
                     </div>
-
                 </div>
 
-                {/* Dica de estudo */}
                 <motion.div
                     key={mode}
                     initial={{ opacity: 0, y: 5 }}
@@ -241,7 +251,6 @@ const PomodoroPage = () => {
                     </p>
                 </motion.div>
 
-                {/* Modal de Configurações */}
                 <dialog id="pomodoro_settings_modal" className="modal">
                     <div className="modal-box max-w-sm">
                         <h3 className="font-bold text-lg mb-6 flex items-center gap-2">
@@ -296,7 +305,7 @@ const PomodoroPage = () => {
                                     type="button"
                                     className="btn btn-ghost"
                                     onClick={() => {
-                                        setTempSettings(settings); // Reseta os inputs se cancelar
+                                        setTempSettings(settings);
                                         document.getElementById('pomodoro_settings_modal').close();
                                     }}
                                 >
@@ -310,7 +319,6 @@ const PomodoroPage = () => {
                         <button onClick={() => setTempSettings(settings)}>close</button>
                     </form>
                 </dialog>
-
             </motion.div>
         </div>
     );
