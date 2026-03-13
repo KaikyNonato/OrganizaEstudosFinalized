@@ -4,7 +4,8 @@ import { Clock, CircleCheck, FileText, Paperclip } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { API_URL } from '../../../API_URL'
 import { useAuthStore } from '../../store/authStore'
-import { useMatterStore } from '../../store/matterStore' // <-- Importando o Zustand
+import { useMatterStore } from '../../store/matterStore' 
+import { Link } from 'react-router-dom' // <-- IMPORTAÇÃO DO LINK ADICIONADA
 
 const Countdown = ({ targetDate, textSize = "text-sm" }) => {
     const [timeLeft, setTimeLeft] = useState("");
@@ -59,25 +60,21 @@ const Countdown = ({ targetDate, textSize = "text-sm" }) => {
 };
 
 const ReviewsPage = () => {
-    // Pegamos allSubjects do Zustand e o renomeamos para subjects para manter o resto do código intacto
     const { allSubjects: subjects, fetchAllSubjects } = useMatterStore()
     const [selectedSubject, setSelectedSubject] = useState(null)
     const { isAuthenticated } = useAuthStore()
 
     useEffect(() => {
         if (isAuthenticated) {
-            // false = Usa o cache se já tiver os dados, evita loading extra
             fetchAllSubjects(false)
         }
     }, [isAuthenticated, fetchAllSubjects])
 
     const handleConclude = async (id, review) => {
         try {
-            // Nota: enviando body vazio {} pois é um PUT, e a config de credenciais no 3º argumento
             const response = await axios.put(API_URL + `/subject/concluded-review/${id}/${review}`, {}, { withCredentials: true })
             if (response.data.success) {
                 toast.success("Revisão concluída")
-                // true = Força a buscar na API novamente para atualizar as revisões concluídas
                 fetchAllSubjects(true)
             }
         } catch (error) {
@@ -284,6 +281,7 @@ const ReviewsPage = () => {
                                     </div>
                                 </div>
 
+                                {/* --- MUDANÇA DOS ANEXOS AQUI (USANDO O LINK) --- */}
                                 {selectedSubject.attachments && selectedSubject.attachments.length > 0 ? (
                                     <div className="flex flex-col gap-2">
                                         <div className='flex gap-1 text-sm '>
@@ -293,7 +291,13 @@ const ReviewsPage = () => {
 
                                         <div className="flex flex-col gap-2">
                                             {selectedSubject.attachments.map((file, idx) => (
-                                                <a key={idx} href={file.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2 border border-base-content/20 rounded hover:bg-base-200 transition-colors text-sm">
+                                                <Link 
+                                                    key={idx} 
+                                                    to={`/view-pdf/${selectedSubject._id}/${encodeURIComponent(file.public_id)}`} 
+                                                    className="flex items-center gap-2 p-2 border border-base-content/20 rounded hover:bg-base-200 transition-colors text-sm"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                >
                                                     <FileText size={16}
                                                         className={` min-w-[20px]  ${selectedSubject.matter_id?.color === '#ff6467' ? 'text-red-400' :
                                                             selectedSubject.matter_id?.color === '#05df72' ? 'text-green-400' :
@@ -301,7 +305,7 @@ const ReviewsPage = () => {
                                                                     selectedSubject.matter_id?.color === '#ff8904' ? 'text-orange-400' : 'text-purple-400'
                                                             }`} />
                                                     <span className="truncate">{file.name}</span>
-                                                </a>
+                                                </Link>
                                             ))}
                                         </div>
                                     </div>
@@ -316,9 +320,6 @@ const ReviewsPage = () => {
                                         </div>
                                     </div>
                                 )}
-
-
-
                             </div>
 
                             <div className="modal-action">
