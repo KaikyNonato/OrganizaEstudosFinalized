@@ -82,11 +82,13 @@ const ViewPdf = () => {
         );
     }
 
+    const googleViewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(pdfUrl)}&embedded=true`;
+    
     return (
         <div className="flex flex-col h-screen">
             <div className="flex-1 bg-base-200/50 overflow-hidden ">
                 <iframe 
-                    src={pdfUrl} 
+                    src={googleViewerUrl} 
                     className="w-full h-full" 
                     title="Visualizador de PDF Seguro"
                 ></iframe>
