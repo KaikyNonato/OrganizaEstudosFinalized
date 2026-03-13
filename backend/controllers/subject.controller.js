@@ -1,6 +1,7 @@
 import cloudinary from '../utils/cloudinary.js';
 import Subject from "../models/subject.model.js";
 import Matter from "../models/matter.model.js";
+import https from 'https';
 
 
 
@@ -69,7 +70,7 @@ export const updateSubject = async (req, res) => {
         }
 
         if (title) subject.title = title;
-        
+
         // NOVO: Atualiza as datas manualmente se vierem na requisição
         if (review1) subject.review1 = review1;
         if (review2) subject.review2 = review2;
@@ -107,7 +108,7 @@ export const reorderSubjects = async (req, res) => {
         const { updates } = req.body; // Array de { _id, order }
 
         // Atualiza todos os assuntos em paralelo
-        const promises = updates.map(update => 
+        const promises = updates.map(update =>
             Subject.findByIdAndUpdate(update._id, { order: update.order })
         );
 
@@ -151,7 +152,7 @@ export const uploadAttachment = async (req, res) => {
 
     try {
         const subject = await Subject.findById(id);
-        
+
         if (!subject) return res.status(404).json({ success: false, message: "Subject not found" });
         if (subject.attachments.length >= 3) return res.status(400).json({ success: false, message: "Limite de 3 arquivos atingido." });
         if (!req.file) return res.status(400).json({ success: false, message: "Nenhum arquivo enviado." });
@@ -207,7 +208,7 @@ export const removeAttachment = async (req, res) => {
 
 export const concludedReview = async (req, res) => {
     const { id } = req.params;
-    const { review } = req.params; 
+    const { review } = req.params;
 
     try {
         const subject = await Subject.findById(id);
@@ -216,11 +217,11 @@ export const concludedReview = async (req, res) => {
             return res.status(404).json({ success: false, message: "Subject not found" });
         }
 
-        if (review === "review1"){
+        if (review === "review1") {
             subject.review1_concluded = true;
-        } else if (review === "review2"){
+        } else if (review === "review2") {
             subject.review2_concluded = true;
-        } else if (review === "review3"){
+        } else if (review === "review3") {
             subject.review3_concluded = true;
         }
 
@@ -231,5 +232,47 @@ export const concludedReview = async (req, res) => {
     } catch (error) {
         console.log("error in concludedReview ", error);
         res.status(500).json({ success: false, message: "Server error" });
+    }
+}
+
+
+
+export const streamPdf = async (req, res) => {
+    try {
+        const { subjectId, publicId } = req.params;
+        const decodedPublicId = decodeURIComponent(publicId);
+
+        const subject = await Subject.findById(subjectId).populate('matter_id');
+
+        if (!subject) {
+            return res.status(404).json({ success: false, message: "Assunto não encontrado" });
+        }
+
+        //Verifica se o usuário que fez a requisição é o dono da matéria
+        if (subject.matter_id.user_id.toString() !== req.userId) {
+            return res.status(403).json({ success: false, message: "Acesso negado. Você não é o dono deste arquivo." });
+        }
+
+        //Verifica se o arquivo existe dentro do assunto
+        const attachment = subject.attachments.find(att => att.public_id === decodedPublicId);
+        if (!attachment) {
+            return res.status(404).json({ success: false, message: "Arquivo não encontrado no banco de dados." });
+        }
+
+        // Faz o download do Cloudinary e repassa (Pipe) para o Frontend
+        https.get(attachment.url, (stream) => {
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(attachment.name)}"`);
+
+            // O pipe conecta o download do Cloudinary direto na resposta pro Frontend
+            stream.pipe(res);
+        }).on('error', (e) => {
+            console.log("Erro no stream do Cloudinary: ", e);
+            res.status(500).json({ success: false, message: "Erro ao ler o arquivo na nuvem." });
+        });
+
+    } catch (error) {
+        console.log("error in streamPdf ", error);
+        res.status(500).json({ success: false, message: "Erro interno no servidor" });
     }
 }
