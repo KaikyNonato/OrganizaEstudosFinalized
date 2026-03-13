@@ -1,11 +1,11 @@
-// Arquivo: src/pages/viewfilesPages/ViewPdf.jsx (ou onde quer que esteja salvo)
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useMatterStore } from '../../store/matterStore';
 import toast from 'react-hot-toast';
 import { Loader, ArrowLeft, FileText, Download } from 'lucide-react';
 import axios from 'axios';
-import { API_URL } from '../../../API_URL'; // Ajuste este caminho se necessário
+import { API_URL } from '../../../API_URL';
 
 const ViewPdf = () => {
     const { subjectId, publicId } = useParams();
@@ -48,7 +48,7 @@ const ViewPdf = () => {
                 // 2. Busca do PDF no nosso Backend (Proxy) enviando o cookie de segurança
                 const response = await axios.get(`${API_URL}/subject/stream-pdf/${subjectId}/${encodeURIComponent(decodedPublicId)}`, {
                     withCredentials: true, // Garante que o usuário logado seja validado
-                    responseType: 'blob'   // MÁGICA: Trata a resposta como arquivo binário
+                    responseType: 'blob'   //Trata a resposta como arquivo binário
                 });
 
                 // 3. Cria uma URL temporária e segura na memória do navegador do usuário
