@@ -4,8 +4,8 @@ import toast from 'react-hot-toast'
 import { Plus, Pencil, Trash, Calendar, BookOpen, FileText, Paperclip, CircleCheck, PlayCircle } from 'lucide-react'
 import { API_URL } from '../../../API_URL'
 import { useAuthStore } from '../../store/authStore'
-import { useMatterStore } from '../../store/matterStore' // <-- Importando cache das matérias
-import { useTimelineStore } from '../../store/timelineStore' // <-- Importando cache do cronograma
+import { useMatterStore } from '../../store/matterStore'
+import { useTimelineStore } from '../../store/timelineStore' 
 import { Link, useNavigate } from 'react-router-dom'
 import { usePomodoroStore } from '../../store/pomodoroStore'
 
@@ -217,7 +217,6 @@ const TimeLinePage = () => {
                                         <div className="flex items-center gap-1">
                                             <Calendar size={12} /> {reviews.length} Revisões
                                         </div>
-                                        {/* <span className="text-[10px] opacity-0 group-hover:opacity-100 transition-opacity text-primary">Ver todas</span> */}
                                     </div>
                                     <div className='flex flex-col gap-1'>
                                         {reviews.slice(0, 10).map(r => (
@@ -454,6 +453,7 @@ const TimeLinePage = () => {
                                     </div>
                                 )}
 
+                                {/* --- MUDANÇA DOS ANEXOS AQUI (USANDO O LINK) --- */}
                                 {selectedSubject.attachments && selectedSubject.attachments.length > 0 ? (
                                     <div className="flex flex-col gap-2">
                                         <div className='flex gap-1 text-sm '>
@@ -463,10 +463,16 @@ const TimeLinePage = () => {
 
                                         <div className="flex flex-col gap-2">
                                             {selectedSubject.attachments.map((file, idx) => (
-                                                <a key={idx} href={file.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2 border border-base-content/20 rounded hover:bg-base-200 transition-colors text-sm">
+                                                <Link 
+                                                    key={idx} 
+                                                    to={`/view-pdf/${selectedSubject._id}/${encodeURIComponent(file.public_id)}`} 
+                                                    className="flex items-center gap-2 p-2 border border-base-content/20 rounded hover:bg-base-200 transition-colors text-sm"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                >
                                                     <FileText size={16} style={{ color: selectedSubject.matter_id?.color || 'currentColor' }} />
                                                     <span className="truncate">{file.name}</span>
-                                                </a>
+                                                </Link>
                                             ))}
                                         </div>
                                     </div>
