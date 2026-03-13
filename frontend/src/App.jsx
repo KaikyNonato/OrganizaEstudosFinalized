@@ -20,12 +20,13 @@ import ReviewsPage from './pages/reviewsPages/ReviewsPage'
 import TimeLinePage from './pages/timelinePages/TimeLinePage'
 import PomodoroPage from './pages/pomodoroPages/PomodoroPage'
 import AdminPage from './pages/adminPages/AdminPage'
+import ViewPdf from './pages/viewfilesPages/ViewPdf'
 
 
 const AdminRoute = () => {
   const { isAuthenticated, user } = useAuthStore();
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (!user?.isAdmin) return <Navigate to="/" replace />; 
+  if (!user?.isAdmin) return <Navigate to="/" replace />;
   return <Outlet />;
 }
 
@@ -37,13 +38,17 @@ const ProtectedRoute = () => {
     return <Navigate to="/login" replace />;
   }
 
+  if (!user.isVerified) {
+    return <Navigate to="/verify-email" replace />;
+  }
+
   return <Outlet />;
 }
 
 const RedirectAuthenticatedUser = () => {
   const { isAuthenticated, user } = useAuthStore();
 
-  if (isAuthenticated) {
+  if (isAuthenticated && user.isVerified) {
     // toast.error('Você já está autenticado ou verificado!', {id: 'already-authenticated'});
     return <Navigate to="/" replace />;
   }
@@ -65,20 +70,29 @@ function App() {
     </div>
   )
 
+  const hideNavbarRoutes = ['/signup', '/login', '/verify-email', '/forgot-password'];
+  const shouldHideNavbar = hideNavbarRoutes.includes(location.pathname) ||
+    location.pathname.startsWith('/reset-password') ||
+    location.pathname.startsWith('/view-pdf');
+
   return (
     <>
-      {!['/signup', '/login'].includes(location.pathname) && <Navbar />}
+      {!shouldHideNavbar && <Navbar />}
 
       <Routes>
 
         <Route element={<RedirectAuthenticatedUser />}>
           <Route path='/signup' element={<SignupPage />} />
           <Route path='/login' element={<LoginPage />} />
+          <Route path='/verify-email' element={<VerifyEmailPage />} />
+          <Route path='/forgot-password' element={<ForgotPasswordPage />} />
+          <Route path='/reset-password/:token' element={<ResetPasswordPage />} />
         </Route>
 
-        <Route element={<ProtectedRoute/>}>
+        <Route element={<ProtectedRoute />}>
           <Route path='/perfil' element={<PerfilPage />} />
           <Route path='/update-user' element={<UpdateUserPage />} />
+          <Route path='/view-pdf/:subjectId/:publicId' element={<ViewPdf />} />
         </Route>
 
 
