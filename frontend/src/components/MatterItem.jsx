@@ -3,11 +3,12 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
-    PencilLine, Trash, ChevronUp, ChevronDown, ArrowUp, ArrowDown, 
-    CircleX, CircleCheck, Paperclip, FileText, Loader 
+import {
+    PencilLine, Trash, ChevronUp, ChevronDown, ArrowUp, ArrowDown,
+    CircleX, CircleCheck, Paperclip, FileText, Loader
 } from 'lucide-react'
 
+import { Link } from 'react-router-dom';
 // Adapte os caminhos abaixo conforme a estrutura real das suas pastas
 import { API_URL } from '../../API_URL'
 import { useMatterStore } from '../../src/store/matterStore'
@@ -36,7 +37,7 @@ const MatterItem = ({ matter }) => {
     const [subjectTitle, setSubjectTitle] = useState('')
     const [editingSubject, setEditingSubject] = useState(null)
     const [editTitle, setEditTitle] = useState('')
-    const [editReviewDate, setEditReviewDate] = useState('') 
+    const [editReviewDate, setEditReviewDate] = useState('')
     const [editTitleMatter, setEditTitleMatter] = useState('')
     const [editColorMatter, setEditColorMatter] = useState('')
 
@@ -249,7 +250,7 @@ const MatterItem = ({ matter }) => {
         setIsDeletingMatter(true)
         const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-        await delay(1000); 
+        await delay(1000);
 
         try {
             const response = await axios.delete(API_URL + `/matter/delete-matter/${matter._id}`, { withCredentials: true })
@@ -400,7 +401,15 @@ const MatterItem = ({ matter }) => {
                                                         >
                                                             <div className='p-2 pt-0 flex flex-col gap-2'>
                                                                 {subject.attachments.map(file => (
-                                                                    <a key={file.public_id} href={file.url} target="_blank" rel="noopener noreferrer" className='hover:underline hover:text-primary truncate font-normal' title={file.name}>
+                                                                    <Link
+                                                                        key={file.public_id}
+                                                                        // Passamos o subject._id e o public_id codificado (por causa das barras /)
+                                                                        to={`/view-pdf/${subject._id}/${encodeURIComponent(file.public_id)}`}
+                                                                        className='hover:underline hover:text-primary truncate font-normal'
+                                                                        title={file.name}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                    >
                                                                         <div className='btn btn-sm btn-soft flex justify-between items-center gap-2 hover:text-primary min-w-0 bg-base-100'>
                                                                             <div className='flex items-center gap-2 truncate'>
                                                                                 <FileText className={`min-w-[20px] ${matter.color === '#ff6467' ? 'text-red-400' : matter.color === '#05df72' ? 'text-green-400' : matter.color === '#50a2ff' ? 'text-blue-400' : matter.color === '#ff8904' ? 'text-orange-400' : 'text-purple-400'}`} size={15}></FileText>
@@ -410,7 +419,7 @@ const MatterItem = ({ matter }) => {
                                                                                 {deletingFileId === file.public_id ? <Loader size={15} className="animate-spin" /> : <Trash className='hover:text-red-400' size={15} />}
                                                                             </button>
                                                                         </div>
-                                                                    </a>
+                                                                    </Link>
                                                                 ))}
                                                             </div>
                                                         </motion.div>
@@ -512,12 +521,14 @@ const MatterItem = ({ matter }) => {
                                     {viewingSubject.attachments && viewingSubject.attachments.length > 0 ? (
                                         <div className="flex flex-col gap-2">
                                             {viewingSubject.attachments.map(file => (
-                                                <a
+                                                <Link
                                                     key={file.public_id}
-                                                    href={file.url}
+                                                    // Passamos o subject._id e o public_id codificado (por causa das barras /)
+                                                    to={`/view-pdf/${viewingSubject._id}/${encodeURIComponent(file.public_id)}`}
+                                                    className='flex items-center gap-2 p-2 border border-base-content/20 rounded hover:bg-base-200 transition-colors text-sm'
+                                                    title={file.name}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="flex items-center gap-2 p-2 border border-base-content/20 rounded hover:bg-base-200 transition-colors text-sm"
                                                 >
                                                     <div className="bg-base-100  rounded text-primary">
                                                         <FileText size={16} className={` min-w-[20px]  ${matter?.color === '#ff6467' ? 'text-red-400' :
@@ -527,7 +538,7 @@ const MatterItem = ({ matter }) => {
                                                             }`} />
                                                     </div>
                                                     <span className="text-sm truncate flex-1 group-hover:text-primary transition-colors">{file.name}</span>
-                                                </a>
+                                                </Link>
                                             ))}
                                         </div>
                                     ) : (
