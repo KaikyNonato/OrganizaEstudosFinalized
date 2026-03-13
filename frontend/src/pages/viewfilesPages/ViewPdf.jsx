@@ -1,21 +1,23 @@
-
+// Arquivo: src/pages/viewfilesPages/ViewPdf.jsx (ou onde quer que esteja salvo)
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useMatterStore } from '../../store/matterStore';
 import toast from 'react-hot-toast';
 import { Loader, ArrowLeft, FileText, Download } from 'lucide-react';
 import axios from 'axios';
-import { API_URL } from '../../../API_URL';
+import { API_URL } from '../../../API_URL'; // Ajuste este caminho se necessário
 
 const ViewPdf = () => {
     const { subjectId, publicId } = useParams();
     const decodedPublicId = decodeURIComponent(publicId);
     const navigate = useNavigate();
-    
+
     const { fetchAllSubjects, hasFetchedAllSubjects } = useMatterStore();
     const [isLoading, setIsLoading] = useState(true);
     const [pdfUrl, setPdfUrl] = useState('');
     const [pdfName, setPdfName] = useState('');
+
+    const isMobile = window.innerWidth < 768;
 
     useEffect(() => {
         let objectUrl = null;
@@ -26,10 +28,10 @@ const ViewPdf = () => {
                 if (!hasFetchedAllSubjects) {
                     await fetchAllSubjects(true);
                 }
-                
+
                 const subjects = useMatterStore.getState().allSubjects;
                 const subject = subjects.find(s => s._id === subjectId);
-                
+
                 if (!subject) {
                     toast.error("Usuário não autorizado!", { id: 'unauthorized_pdf' });
                     navigate('/', { replace: true });
@@ -48,7 +50,7 @@ const ViewPdf = () => {
                 // 2. Busca do PDF no nosso Backend (Proxy) enviando o cookie de segurança
                 const response = await axios.get(`${API_URL}/subject/stream-pdf/${subjectId}/${encodeURIComponent(decodedPublicId)}`, {
                     withCredentials: true, // Garante que o usuário logado seja validado
-                    responseType: 'blob'   //Trata a resposta como arquivo binário
+                    responseType: 'blob'   // MÁGICA: Trata a resposta como arquivo binário
                 });
 
                 // 3. Cria uma URL temporária e segura na memória do navegador do usuário
@@ -82,16 +84,31 @@ const ViewPdf = () => {
         );
     }
 
-    const googleViewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(pdfUrl)}&embedded=true`;
-    
     return (
         <div className="flex flex-col h-screen">
-            <div className="flex-1 bg-base-200/50 overflow-hidden ">
-                <iframe 
-                    src={googleViewerUrl} 
-                    className="w-full h-full" 
-                    title="Visualizador de PDF Seguro"
-                ></iframe>
+            {/* Área de Visualização */}
+            <div className="flex-1 bg-base-200/50  overflow-hidden flex items-center justify-center">
+                {isMobile ? (
+                    // VISÃO PARA CELULAR: Interface amigável para baixar o arquivo
+                    <div className="text-center p-6 flex flex-col items-center gap-4">
+                        <div className="relative">
+                            <FileText size={80} className="text-base-content/20" />
+                        </div>
+                        <p className="text-sm text-base-content/60 max-w-xs">
+                            Baixe o PDF para abri-lo no seu celular.
+                        </p>
+                        <a href={pdfUrl} download={pdfName} className="btn btn-primary mt-4 w-full shadow-lg shadow-primary/30">
+                            <Download size={20} /> Baixar
+                        </a>
+                    </div>
+                ) : (
+                    // VISÃO PARA PC: Iframe normal pois navegadores de PC suportam PDFs nativamente
+                    <iframe
+                        src={pdfUrl}
+                        className="w-full h-full"
+                        title="Visualizador de PDF Seguro"
+                    ></iframe>
+                )}
             </div>
         </div>
     );
