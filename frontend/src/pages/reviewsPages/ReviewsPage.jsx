@@ -317,6 +317,8 @@ const ReviewsPage = () => {
                                                     key={idx}
                                                     to={`/view-pdf/${selectedSubject._id}/${encodeURIComponent(file.public_id)}`}
                                                     className="flex items-center gap-2 p-2 border border-base-content/20 rounded hover:bg-base-200 transition-colors text-sm"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
                                                 >
                                                     <FileText size={16}
                                                         className={` min-w-[20px]  ${selectedSubject.matter_id?.color === '#ff6467' ? 'text-red-400' :
