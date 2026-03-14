@@ -5,11 +5,11 @@ import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     PencilLine, Trash, ChevronUp, ChevronDown, ArrowUp, ArrowDown,
-    CircleX, CircleCheck, Paperclip, FileText, Loader
+    CircleX, CircleCheck, Paperclip, FileText, Loader,
+    Plus
 } from 'lucide-react'
 
 import { Link } from 'react-router-dom';
-// Adapte os caminhos abaixo conforme a estrutura real das suas pastas
 import { API_URL } from '../../API_URL'
 import { useMatterStore } from '../../src/store/matterStore'
 
@@ -443,7 +443,7 @@ const MatterItem = ({ matter }) => {
                                     onChange={(e) => setSubjectTitle(e.target.value)}
                                 />
                                 <button onClick={handleCreateSubject} className='btn btn-sm' title='Adicionar' disabled={isCreatingSubject}>
-                                    {isCreatingSubject ? <Loader size={15} className="animate-spin" /> : <PencilLine size={15} />}
+                                    {isCreatingSubject ? <Loader size={15} className="animate-spin" /> : <Plus size={15} />}
                                 </button>
                             </div>
                         </div>
