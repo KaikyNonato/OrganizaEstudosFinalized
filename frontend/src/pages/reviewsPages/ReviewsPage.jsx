@@ -39,7 +39,7 @@ const Countdown = ({ targetDate, textSize = "text-sm" }) => {
                 const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
                 if (days > 0) {
-                    setTimeLeft(`${days} dia${days > 1 ? 's' : ''}`);
+                    setTimeLeft(`${days +1} dia${days >= 1 ? 's' : ''}`); //!se a logica estiver errado é so tirar o +1 e o =
                 } else if (hours > 0) {
                     setTimeLeft(`${hours} hora${hours > 1 ? 's' : ''}`);
                 }
@@ -57,7 +57,7 @@ const Countdown = ({ targetDate, textSize = "text-sm" }) => {
                 const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
                 if (days > 0) {
-                    setTimeLeft(`${days} dia${days > 1 ? 's' : ''}`);
+                    setTimeLeft(`${days+1} dia${days >= 1 ? 's' : ''}`); //!se a logica estiver errado é so tirar o +1 e o =
                 } else if (hours > 0) {
                     setTimeLeft(`${hours} hora${hours > 1 ? 's' : ''}`);
                 } else {
