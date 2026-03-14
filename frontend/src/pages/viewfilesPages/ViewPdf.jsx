@@ -77,7 +77,7 @@ const ViewPdf = () => {
 
     if (isLoading) {
         return (
-            <div className="min-h-[80vh] flex flex-col items-center justify-center text-base-content/50">
+            <div className="min-h-screen flex flex-col items-center justify-center text-base-content/50">
                 <Loader className="animate-spin mb-4" size={40} />
                 <p className="font-medium animate-pulse">carregando arquivo...</p>
             </div>
