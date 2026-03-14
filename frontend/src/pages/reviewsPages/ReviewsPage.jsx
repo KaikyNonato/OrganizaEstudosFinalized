@@ -4,8 +4,8 @@ import { Clock, CircleCheck, FileText, Paperclip } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { API_URL } from '../../../API_URL'
 import { useAuthStore } from '../../store/authStore'
-import { useMatterStore } from '../../store/matterStore' 
-import { Link } from 'react-router-dom' // <-- IMPORTAÇÃO DO LINK ADICIONADA
+import { useMatterStore } from '../../store/matterStore'
+import { Link } from 'react-router-dom'
 
 const Countdown = ({ targetDate, textSize = "text-sm" }) => {
     const [timeLeft, setTimeLeft] = useState("");
@@ -15,40 +15,59 @@ const Countdown = ({ targetDate, textSize = "text-sm" }) => {
         const updateTimer = () => {
             const now = new Date();
             const target = new Date(targetDate);
-            const diff = target - now;
 
-            const isToday = now.getDate() === target.getDate() &&
-                now.getMonth() === target.getMonth() &&
-                now.getFullYear() === target.getFullYear();
+            // Início do dia da revisão (00:00:00)
+            const targetStartOfDay = new Date(target.getFullYear(), target.getMonth(), target.getDate(), 0, 0, 0);
+
+            // Fim do dia da revisão (23:59:59)
+            const targetEndOfDay = new Date(target.getFullYear(), target.getMonth(), target.getDate(), 23, 59, 59, 999);
+
+            // Verifica se hoje está dentro da janela de 00:00 a 23:59 do dia da revisão
+            const isToday = now.getTime() >= targetStartOfDay.getTime() && now.getTime() <= targetEndOfDay.getTime();
 
             if (isToday) {
                 setIsLate(false);
                 setTimeLeft("HOJE");
-            } else if (diff <= 0) {
-                setIsLate(true);
-                const absDiff = Math.abs(diff);
-                const days = Math.floor(absDiff / (1000 * 60 * 60 * 24));
+            }
+            else if (now.getTime() < targetStartOfDay.getTime()) {
+                // Antes da data de revisão: Cronômetro até 00:00 do dia da revisão (final do dia anterior)
+                setIsLate(false);
+                const diff = targetStartOfDay.getTime() - now.getTime();
+
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
                 if (days > 0) {
                     setTimeLeft(`${days} dia${days > 1 ? 's' : ''}`);
-                } else {
-                    const hours = Math.floor(absDiff / (1000 * 60 * 60));
-                    const minutes = Math.floor(absDiff / (1000 * 60));
-                    setTimeLeft(` ${hours > 0 ? hours + 'h' : minutes + 'm'}`);
+                } else if (hours > 0) {
+                    setTimeLeft(`${hours} hora${hours > 1 ? 's' : ''}`);
                 }
-            } else if (diff > 24 * 60 * 60 * 1000) {
-                setIsLate(false);
+                else {
+                    setTimeLeft(`${minutes} minuto${minutes > 1 ? 's' : ''}`);
+                }
+            }
+            else {
+                // Depois da data de revisão (Atrasado): Cronômetro contando a partir de 23:59
+                setIsLate(true);
+                const diff = now.getTime() - targetEndOfDay.getTime();
+
                 const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                setTimeLeft(`${days + 1} dia${days >= 1 ? 's' : ''}`);
-            } else {
-                setIsLate(false);
-                const hours = Math.floor(diff / (1000 * 60 * 60));
-                setTimeLeft(`${hours} horas `);
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+                if (days > 0) {
+                    setTimeLeft(`${days} dia${days > 1 ? 's' : ''}`);
+                } else if (hours > 0) {
+                    setTimeLeft(`${hours} hora${hours > 1 ? 's' : ''}`);
+                } else {
+                    setTimeLeft(`${minutes} minuto${minutes > 1 ? 's' : ''}`);
+                }
             }
         };
 
         updateTimer();
-        const interval = setInterval(updateTimer, 1000);
+        const interval = setInterval(updateTimer, 60000); // Atualiza a cada 1 minuto para não pesar a performance
         return () => clearInterval(interval);
     }, [targetDate]);
 
@@ -83,8 +102,11 @@ const ReviewsPage = () => {
         }
     }
 
+    // CORREÇÃO: Ele só será considerado atrasado de verdade após as 23:59:59 daquele dia.
     const checkIsLate = (date) => {
-        return new Date(date) < new Date();
+        const d = new Date(date);
+        const targetEndOfDay = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+        return new Date() > targetEndOfDay;
     }
 
     const checkIsToday = (date) => {
@@ -291,12 +313,10 @@ const ReviewsPage = () => {
 
                                         <div className="flex flex-col gap-2">
                                             {selectedSubject.attachments.map((file, idx) => (
-                                                <Link 
-                                                    key={idx} 
-                                                    to={`/view-pdf/${selectedSubject._id}/${encodeURIComponent(file.public_id)}`} 
+                                                <Link
+                                                    key={idx}
+                                                    to={`/view-pdf/${selectedSubject._id}/${encodeURIComponent(file.public_id)}`}
                                                     className="flex items-center gap-2 p-2 border border-base-content/20 rounded hover:bg-base-200 transition-colors text-sm"
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
                                                 >
                                                     <FileText size={16}
                                                         className={` min-w-[20px]  ${selectedSubject.matter_id?.color === '#ff6467' ? 'text-red-400' :
