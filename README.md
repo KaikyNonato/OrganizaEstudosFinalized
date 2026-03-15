@@ -2,6 +2,29 @@
 
 O **OrganizaEstudos** é uma plataforma Full-Stack projetada para revolucionar a forma como estudantes gerenciam sua rotina acadêmica. A aplicação integra gestão de matérias, anexos de PDFs, cronograma semanal, técnica Pomodoro e um sistema inteligente de revisões espaçadas (24h, 7 dias e 30 dias) para maximizar a retenção de conteúdo.
 
+## 🗺️ Mapa de Rotas (URLs)
+
+Abaixo está a lista de todas as páginas e rotas disponíveis na aplicação:
+
+| Rota / URL | Descrição da Tela | Nível de Acesso |
+| :--- | :--- | :--- |
+| `/` | Dashboard (Página Inicial com métricas e agenda do dia) | Autenticado |
+| `/login` | Acesso à plataforma | Público |
+| `/signup` | Cadastro de novos usuários | Público |
+| `/verify-email` | Validação de conta via código OTP de 6 dígitos | Público |
+| `/forgot-password` | Solicitação de link para recuperação de senha | Público |
+| `/reset-password/:token` | Tela segura para criação de uma nova senha | Público |
+| `/materias` | Gestão de matérias, assuntos e upload de PDFs | Autenticado |
+| `/revisoes` | Painel inteligente de revisões (24h, 7 dias e 30 dias) | Autenticado |
+| `/cronograma` | Organização da grade semanal de horários de estudo | Autenticado |
+| `/pomodoro` | Cronômetro de Foco, Pausa Curta e Pausa Longa | Autenticado |
+| `/perfil` | Visualização dos dados da conta e status de verificação | Autenticado |
+| `/update-user` | Edição dos dados do perfil do usuário | Autenticado |
+| `/view-pdf/:subjectId/:publicId` | Visualizador interno e protegido de arquivos PDF | Autenticado |
+| `/admin` | Painel de controle gerencial e visão global de usuários | Admin |
+
+---
+
 ## ✨ Funcionalidades
 
 ### 🔐 Autenticação e Segurança
