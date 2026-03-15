@@ -111,7 +111,7 @@ Abaixo está a lista de todas as páginas e rotas disponíveis na aplicação:
 ### 1. Clonando o Repositório
 
 ```bash
-git clone https://github.com/KaikyNonato/PROJETO-BASE-MERN.git
+git clone https://github.com/KaikyNonato/OrganizaEstudosFinalized.git
 cd OrganizaEstudos
 
 ```
