@@ -107,8 +107,10 @@ export const useAuthStore = create((set) => ({
             set({ user: null, isAuthenticated: false, isLoading: false })
             useMatterStore.getState().clearMatterStore()
             useTimelineStore.getState().clearTimelineStore()
-            window.location.reload()
             toast.success("Até logo!")
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000); 
         } catch (error) {
             set({ error: error.response.data.message || "Error logging out", isLoading: false })
             throw error;
