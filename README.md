@@ -178,5 +178,3 @@ Este projeto está sob a licença [MIT](https://choosealicense.com/licenses/mit/
 Feito por Kaiky Nonato (https://github.com/KaikyNonato)
 
 ---
-
-O que achou do formato? Se quiser que eu adicione alguma seção específica de contato, links para o seu LinkedIn ou instruções de deploy (como Vercel/Render), é só me avisar que eu incluo para você!
