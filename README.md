@@ -29,18 +29,9 @@ Abaixo está a lista de todas as páginas e rotas disponíveis na aplicação:
 
 ### 🔐 Autenticação e Segurança
 
-* 
-**Cadastro e Login Seguros:** Senhas criptografadas (Bcrypt) e autenticação via JWT armazenado em cookies HTTP-Only.
-
-
-* 
-**Verificação em Duas Etapas (OTP):** Confirmação de conta via código de 6 dígitos enviado por e-mail.
-
-
-* 
-**Recuperação de Senha:** Fluxo completo para redefinição de senhas com links expiráveis.
-
-
+* **Cadastro e Login Seguros:** Senhas criptografadas (Bcrypt) e autenticação via JWT armazenado em cookies HTTP-Only.
+* **Verificação em Duas Etapas (OTP):** Confirmação de conta via código de 6 dígitos enviado por e-mail.
+* **Recuperação de Senha:** Fluxo completo para redefinição de senhas com links expiráveis.
 * **Visualizador de PDF Blindado:** Os arquivos (PDFs) armazenados na nuvem são acessados através de um *Proxy* no backend, gerando URLs temporárias (`Blob`) no frontend para impedir acessos não autorizados ou compartilhamento de links.
 
 ### 📊 Dashboard (Visão Geral)
