@@ -106,7 +106,6 @@ const HomePage = () => {
                 setNewLinkName('');
                 setNewLinkUrl('');
                 document.getElementById('add_link_modal').close();
-                checkAuth(); 
                 toast.success("Link adicionado!");
             }
         } catch (error) {
@@ -120,7 +119,6 @@ const HomePage = () => {
             const response = await axios.put(API_URL + "/user/update-user", { quickLinks: updatedLinks }, { withCredentials: true });
             if(response.data.success) {
                 setLinks(updatedLinks);
-                checkAuth(); 
                 toast.success("Link removido!");
             }
         } catch (error) {
