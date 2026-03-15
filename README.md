@@ -99,20 +99,10 @@ Abaixo está a lista de todas as páginas e rotas disponíveis na aplicação:
 
 * **[Node.js](https://nodejs.org/)** + **[Express](https://expressjs.com/)**
 * **[MongoDB](https://www.mongodb.com/)** + **[Mongoose](https://mongoosejs.com/)** (Banco de Dados e ORM)
-* 
-**[JSON Web Tokens (JWT)](https://jwt.io/)** (Autenticação via Cookies) 
-
-
-* 
-**[Cloudinary](https://cloudinary.com/)** (Armazenamento de PDFs em Nuvem) 
-
-
-* 
-**[Nodemailer](https://nodemailer.com/)** (Envio de E-mails Transacionais) 
-
-
-* 
-**[Bcryptjs](https://www.npmjs.com/package/bcryptjs)** (Criptografia de Senhas) 
+* **[JSON Web Tokens (JWT)](https://jwt.io/)** (Autenticação via Cookies) 
+* **[Cloudinary](https://cloudinary.com/)** (Armazenamento de PDFs em Nuvem) 
+* **[Nodemailer](https://nodemailer.com/)** (Envio de E-mails Transacionais) 
+* **[Bcryptjs](https://www.npmjs.com/package/bcryptjs)** (Criptografia de Senhas) 
 
 
 
