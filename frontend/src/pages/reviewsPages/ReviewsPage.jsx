@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import axios from 'axios'
+import axios, { all } from 'axios'
 import { Clock, CircleCheck, FileText, Paperclip } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { API_URL } from '../../../API_URL'
@@ -84,6 +84,8 @@ const ReviewsPage = () => {
     const [selectedSubject, setSelectedSubject] = useState(null)
     const { isAuthenticated } = useAuthStore()
 
+    const [visibleConcludedCount, setVisibleConcludedCount] = useState(10)
+
     useEffect(() => {
         if (isAuthenticated) {
             fetchAllSubjects(false)
@@ -122,6 +124,14 @@ const ReviewsPage = () => {
         setSelectedSubject(subject)
         document.getElementById('subject_details_modal').showModal()
     }
+
+
+    const allConcludedReviews = subjects.reduce((acc, subject) => {
+        if (subject.review1_concluded) acc.push({ subject, label: "24 Horas", key: "r1" });
+        if (subject.review2_concluded) acc.push({ subject, label: "7 Dias", key: "r2" });
+        if (subject.review3_concluded) acc.push({ subject, label: "30 Dias", key: "r3" });
+        return acc;
+    }, []);
 
     return (
         <motion.div
@@ -235,28 +245,34 @@ const ReviewsPage = () => {
                         Concluídas
                     </div>
                     <div className='flex flex-col gap-2'>
-                        {!subjects.some(s => s.review1_concluded || s.review2_concluded || s.review3_concluded) ? (
+                        {allConcludedReviews.length === 0 ? (
                             <span className='text-sm text-base-content/60'>Nenhuma revisão concluída</span>
-                        ) : (subjects.map(subject => {
-                            const concluded = [];
-                            if (subject.review1_concluded) concluded.push({ label: "24 Horas", key: "r1" });
-                            if (subject.review2_concluded) concluded.push({ label: "7 Dias", key: "r2" });
-                            if (subject.review3_concluded) concluded.push({ label: "30 Dias", key: "r3" });
-
-                            return concluded.map(review => (
-                                <div className='flex gap-2 border border-base-content/20 rounded-lg p-2  justify-between items-center cursor-pointer hover:bg-base-200/50 hover:shadow-md transition-shadow' key={`${subject._id}-${review.key}`} onClick={() => openSubjectModal(subject)}>
-                                    <div className='flex items-center gap-2 min-w-0'>
-                                        <div className={`rounded-full min-w-4 min-h-4 text-white ${subject.matter_id?.color === '#ff6467' ? 'bg-red-400' : subject.matter_id?.color === '#05df72' ? 'bg-green-400' : subject.matter_id?.color === '#50a2ff' ? 'bg-blue-400' : subject.matter_id?.color === '#ff8904' ? 'bg-orange-400' : 'bg-purple-400'}`}>
+                        ) : (
+                            <>
+                                {allConcludedReviews.slice(0, visibleConcludedCount).map(({ subject, label, key }) => (
+                                    <div className='flex gap-2 border border-base-content/20 rounded-lg p-2 justify-between items-center cursor-pointer hover:bg-base-200/50 hover:shadow-md transition-shadow' key={`${subject._id}-${key}`} onClick={() => openSubjectModal(subject)}>
+                                        <div className='flex items-center gap-2 min-w-0'>
+                                            <div className={`rounded-full min-w-4 min-h-4 text-white ${subject.matter_id?.color === '#ff6467' ? 'bg-red-400' : subject.matter_id?.color === '#05df72' ? 'bg-green-400' : subject.matter_id?.color === '#50a2ff' ? 'bg-blue-400' : subject.matter_id?.color === '#ff8904' ? 'bg-orange-400' : 'bg-purple-400'}`}>
+                                            </div>
+                                            <div className='min-w-0'>
+                                                <p className="font-semibold truncate text-sm">{subject.title}</p>
+                                                <p className='text-sm text-base-content/60 truncate'>{subject.matter_id?.title}</p>
+                                            </div>
                                         </div>
-                                        <div className='min-w-0'>
-                                            <p className="font-semibold truncate text-sm">{subject.title}</p>
-                                            <p className='text-sm text-base-content/60 truncate'>{subject.matter_id?.title}</p>
-                                        </div>
+                                        <span className='badge badge-ghost rounded max-sm:px-5 truncate'>{label}</span>
                                     </div>
-                                    <span className='badge badge-ghost rounded max-sm:px-5 truncate'>{review.label}</span>
-                                </div>
-                            ));
-                        }))}
+                                ))}
+
+                                {/* Botão "Ver mais" (só aparece se tiver itens escondidos) */}
+                                {visibleConcludedCount < allConcludedReviews.length && (
+                                    <div className='flex justify-center items-center'>
+                                        <button onClick={() => setVisibleConcludedCount(prev => prev + 10)} className="btn btn-sm btn-ghost text-primary ">
+                                            Ver mais ({allConcludedReviews.length - visibleConcludedCount})
+                                        </button>
+                                    </div>
+                                )}
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
