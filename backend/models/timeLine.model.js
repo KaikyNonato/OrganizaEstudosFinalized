@@ -26,6 +26,8 @@ const timeLineSchema = new mongoose.Schema({
     }
 }, { timestamps: true })
 
+timeLineSchema.index({ user_id: 1 });
+
 const TimeLine = mongoose.model("TimeLine", timeLineSchema);
 
 export default TimeLine;
