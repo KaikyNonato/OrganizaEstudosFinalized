@@ -5,6 +5,7 @@ import { useTimelineStore } from '../../store/timelineStore';
 import { useAuthStore } from '../../store/authStore';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, RotateCcw, CalendarDays } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 const DAYS_OF_WEEK = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const FULL_DAYS_OF_WEEK = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
@@ -40,15 +41,15 @@ const Calander = () => {
         if (allSubjects && allSubjects.length > 0) {
             allSubjects.forEach(sub => {
                 const color = sub.matter_id?.color || '#ff8904';
-                
+
                 if (sub.review1 && !sub.review1_concluded) {
-                    addEvent(new Date(sub.review1), { type: 'review', title: `24h: ${sub.title}`, color, icon: <RotateCcw size={12}/> });
+                    addEvent(new Date(sub.review1), { type: 'review', title: `24h: ${sub.title}`, color, icon: <RotateCcw size={12} /> });
                 }
                 if (sub.review2 && !sub.review2_concluded) {
-                    addEvent(new Date(sub.review2), { type: 'review', title: `7 Dias: ${sub.title}`, color, icon: <RotateCcw size={12}/> });
+                    addEvent(new Date(sub.review2), { type: 'review', title: `7 Dias: ${sub.title}`, color, icon: <RotateCcw size={12} /> });
                 }
                 if (sub.review3 && !sub.review3_concluded) {
-                    addEvent(new Date(sub.review3), { type: 'review', title: `30 Dias: ${sub.title}`, color, icon: <RotateCcw size={12}/> });
+                    addEvent(new Date(sub.review3), { type: 'review', title: `30 Dias: ${sub.title}`, color, icon: <RotateCcw size={12} /> });
                 }
             });
         }
@@ -60,16 +61,16 @@ const Calander = () => {
         if (schedule && schedule.length > 0) {
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateInMonth = new Date(year, month, day);
-                const dayName = FULL_DAYS_OF_WEEK[dateInMonth.getDay()]; 
+                const dayName = FULL_DAYS_OF_WEEK[dateInMonth.getDay()];
 
                 const dailySchedules = schedule.filter(s => s.day === dayName);
-                
+
                 dailySchedules.forEach(item => {
-                    addEvent(dateInMonth, { 
-                        type: 'schedule', 
-                        title: `${item.startTime} - ${item.matter_id?.title || 'Estudo'}`, 
+                    addEvent(dateInMonth, {
+                        type: 'schedule',
+                        title: `${item.startTime} - ${item.matter_id?.title || 'Estudo'}`,
                         color: item.matter_id?.color || '#58a9e1',
-                        icon: <Clock size={12}/>
+                        icon: <Clock size={12} />
                     });
                 });
             }
@@ -81,10 +82,10 @@ const Calander = () => {
     const calendarCells = useMemo(() => {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
-        
-        const firstDayOfMonth = new Date(year, month, 1).getDay(); 
+
+        const firstDayOfMonth = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
-        
+
         const cells = [];
 
         for (let i = 0; i < firstDayOfMonth; i++) {
@@ -95,7 +96,7 @@ const Calander = () => {
             const dateObj = new Date(year, month, day);
             const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             const isToday = new Date().toDateString() === dateObj.toDateString();
-            
+
             cells.push({
                 empty: false,
                 day,
@@ -121,11 +122,15 @@ const Calander = () => {
     };
 
     return (
-        <div className="flex flex-col gap-4 sm:gap-6 min-h-[85vh]">
-            
+        <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="flex flex-col gap-4 sm:gap-6 min-h-[85vh]">
+
             {/* Header e Controles (Otimizado para Mobile) */}
             <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4 bg-base-100 p-3 sm:p-4 rounded-lg border border-base-content/20 shadow-sm">
-                
+
                 {/* Mês e Ano centralizados no mobile */}
                 <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-center sm:justify-start">
                     <div className="hidden sm:flex w-10 h-10 bg-primary/10 text-primary rounded-lg items-center justify-center">
@@ -141,15 +146,15 @@ const Calander = () => {
                 <div className="flex items-center justify-between w-full sm:w-auto gap-2">
                     <button onClick={goToToday} className="btn btn-sm btn-soft flex-1 sm:flex-none">Hoje</button>
                     <div className="join w-full sm:w-auto flex justify-end">
-                        <button onClick={prevMonth} className="btn btn-sm join-item flex-1 sm:flex-none"><ChevronLeft size={18}/></button>
-                        <button onClick={nextMonth} className="btn btn-sm join-item flex-1 sm:flex-none"><ChevronRight size={18}/></button>
+                        <button onClick={prevMonth} className="btn btn-sm join-item flex-1 sm:flex-none"><ChevronLeft size={18} /></button>
+                        <button onClick={nextMonth} className="btn btn-sm join-item flex-1 sm:flex-none"><ChevronRight size={18} /></button>
                     </div>
                 </div>
             </div>
 
             {/* Grid do Calendário */}
             <div className="flex-1 bg-base-100 border border-base-content/20 rounded-lg shadow-md overflow-hidden flex flex-col">
-                
+
                 {/* Dias da Semana */}
                 <div className="grid grid-cols-7 bg-base-200/50 border-b border-base-content/20">
                     {DAYS_OF_WEEK.map((day) => (
@@ -164,8 +169,8 @@ const Calander = () => {
                 {/* Células dos Dias */}
                 <div className="grid grid-cols-7 flex-1 auto-rows-fr">
                     {calendarCells.map((cell) => (
-                        <div 
-                            key={cell.key} 
+                        <div
+                            key={cell.key}
                             onClick={() => handleDayClick(cell)}
                             className={`min-h-[60px] sm:min-h-[120px] p-1 sm:p-2 border-b border-r border-base-content/10 transition-colors
                                 ${cell.empty ? 'bg-base-200/30' : 'hover:bg-base-200/50 cursor-pointer'} 
@@ -194,8 +199,8 @@ const Calander = () => {
                                     {/* VISÃO PC: Lista de Eventos Completa */}
                                     <div className="hidden sm:flex flex-col gap-1 overflow-hidden">
                                         {cell.events.slice(0, 3).map((ev, idx) => (
-                                            <div 
-                                                key={idx} 
+                                            <div
+                                                key={idx}
                                                 className="text-xs truncate px-1.5 py-0.5 rounded flex items-center gap-1 opacity-90 hover:opacity-100"
                                                 style={{ backgroundColor: `${ev.color}20`, color: ev.color, borderLeft: `2px solid ${ev.color}` }}
                                                 title={ev.title}
@@ -221,14 +226,14 @@ const Calander = () => {
             <dialog id="day_events_modal" className="modal">
                 <div className="modal-box p-4 sm:p-6">
                     <h3 className="font-bold text-base sm:text-lg mb-4 flex items-center gap-2 border-b border-base-content/10 pb-2">
-                        <CalendarIcon className="text-primary" size={20} /> 
+                        <CalendarIcon className="text-primary" size={20} />
                         Agenda: {selectedDay?.toLocaleDateString('pt-BR')}
                     </h3>
-                    
+
                     <div className="flex flex-col gap-2 max-h-[50vh] overflow-y-auto pr-1">
                         {dayEvents.map((ev, idx) => (
-                            <div 
-                                key={idx} 
+                            <div
+                                key={idx}
                                 className="flex items-center gap-3 p-2 sm:p-3 bg-base-200/50 rounded-lg border border-base-content/10"
                             >
                                 <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: `${ev.color}20`, color: ev.color }}>
@@ -256,7 +261,7 @@ const Calander = () => {
                 </form>
             </dialog>
 
-        </div>
+        </motion.div>
     );
 };
 
