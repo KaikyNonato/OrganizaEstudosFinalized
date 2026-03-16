@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
-import { Plus, Pencil, Trash, Calendar, BookOpen, FileText, Paperclip, CircleCheck, PlayCircle } from 'lucide-react'
+import { Plus, Pencil, Trash, Calendar, BookOpen, FileText, Paperclip, CircleCheck, PlayCircle, CalendarDays } from 'lucide-react'
 import { API_URL } from '../../../API_URL'
 import { useAuthStore } from '../../store/authStore'
-import { useMatterStore } from '../../store/matterStore'
-import { useTimelineStore } from '../../store/timelineStore' 
+import { useMatterStore } from '../../store/matterStore' // <-- Importando cache das matérias
+import { useTimelineStore } from '../../store/timelineStore' // <-- Importando cache do cronograma
 import { Link, useNavigate } from 'react-router-dom'
 import { usePomodoroStore } from '../../store/pomodoroStore'
 
@@ -190,13 +190,20 @@ const TimeLinePage = () => {
         <div className='flex flex-col gap-6'>
             <div className='flex justify-between items-center gap-3'>
                 <h3 className=' font-medium'>◉ Organize seus horários de estudo</h3>
-                {isAuthenticated ? (
-                    <button onClick={openAddModal} className='btn'>
-                        <Plus size={20} /> Adicionar Matéria
-                    </button>
-                ) : (
-                    <Link to="/login" className="btn btn-soft btn-sm">Faça login para adicionar</Link>
-                )}
+                <div className='flex gap-3'>
+                    <Link to={'/calendario'} className='flex btn '>
+                        <CalendarDays className=''></CalendarDays>
+                        <spam className='max-sm:hidden'> Calendario</spam>
+                    </Link>
+                    {isAuthenticated ? (
+                        <button onClick={openAddModal} className='btn'>
+                            <Plus size={20} />
+                            <spam className='max-sm:hidden'>Adicionar Matéria</spam>
+                        </button>
+                    ) : (
+                        <Link to="/login" className="btn btn-soft btn-sm">Faça login para adicionar</Link>
+                    )}
+                </div>
             </div>
 
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
@@ -386,21 +393,21 @@ const TimeLinePage = () => {
             <dialog id="daily_reviews_modal" className="modal">
                 <div className="modal-box">
                     <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                        <Calendar size={20} className="text-primary"/> Revisões de {viewingDay}
+                        <Calendar size={20} className="text-primary" /> Revisões de {viewingDay}
                     </h3>
-                    
+
                     <div className="flex flex-col gap-2 max-h-[60vh] overflow-y-auto pr-1">
                         {dailyReviews.map((r) => (
-                            <div 
-                                key={r._id} 
-                                onClick={() => openReviewModal(r)} 
+                            <div
+                                key={r._id}
+                                onClick={() => openReviewModal(r)}
                                 className="flex items-center justify-between p-3 bg-base-200/50 hover:bg-base-200 rounded-lg border border-base-content/10 cursor-pointer transition-all"
                             >
                                 <div className="flex items-center gap-3 overflow-hidden">
                                     <div className={`w-3 h-3 rounded-full shrink-0`} style={{ backgroundColor: r.matter_id?.color || 'currentColor' }}></div>
                                     <span className="font-medium truncate">{r.title}</span>
                                 </div>
-                                <BookOpen size={16} className="opacity-50 shrink-0"/>
+                                <BookOpen size={16} className="opacity-50 shrink-0" />
                             </div>
                         ))}
                     </div>
@@ -435,7 +442,7 @@ const TimeLinePage = () => {
                                 {(selectedSubject.review1 || selectedSubject.review2 || selectedSubject.review3) && (
                                     <div className="bg-base-200/50 flex flex-col gap-1 text-center border border-base-content/20 p-3 rounded-lg">
                                         <span className='text-start font-semibold text-sm opacity-70'>Status das Revisões:</span>
-                                        
+
                                         <div className={`flex justify-between gap-3 ${selectedSubject.review1_concluded ? 'text-green-400 line-through' : checkIsLate(selectedSubject.review1) ? 'text-red-400' : ''}`}>
                                             <span className="text-xs font-bold">24h:</span>
                                             <span className="font-mono">{selectedSubject.review1 ? new Date(selectedSubject.review1).toLocaleDateString() : 'N/A'}</span>
@@ -445,7 +452,7 @@ const TimeLinePage = () => {
                                             <span className="text-xs font-bold">7 Dias:</span>
                                             <span className="font-mono">{selectedSubject.review2 ? new Date(selectedSubject.review2).toLocaleDateString() : 'N/A'}</span>
                                         </div>
-                                        
+
                                         <div className={`flex justify-between gap-3 ${selectedSubject.review3_concluded ? 'text-green-400 line-through' : checkIsLate(selectedSubject.review3) ? 'text-red-400' : ''}`}>
                                             <span className="text-xs font-bold">30 Dias:</span>
                                             <span className="font-mono">{selectedSubject.review3 ? new Date(selectedSubject.review3).toLocaleDateString() : 'N/A'}</span>
@@ -463,9 +470,9 @@ const TimeLinePage = () => {
 
                                         <div className="flex flex-col gap-2">
                                             {selectedSubject.attachments.map((file, idx) => (
-                                                <Link 
-                                                    key={idx} 
-                                                    to={`/view-pdf/${selectedSubject._id}/${encodeURIComponent(file.public_id)}`} 
+                                                <Link
+                                                    key={idx}
+                                                    to={`/view-pdf/${selectedSubject._id}/${encodeURIComponent(file.public_id)}`}
                                                     className="flex items-center gap-2 p-2 border border-base-content/20 rounded hover:bg-base-200 transition-colors text-sm"
                                                     target="_blank"
                                                     rel="noopener noreferrer"
