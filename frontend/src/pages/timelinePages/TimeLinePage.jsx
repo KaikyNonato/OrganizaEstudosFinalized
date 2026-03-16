@@ -8,6 +8,7 @@ import { useMatterStore } from '../../store/matterStore' // <-- Importando cache
 import { useTimelineStore } from '../../store/timelineStore' // <-- Importando cache do cronograma
 import { Link, useNavigate } from 'react-router-dom'
 import { usePomodoroStore } from '../../store/pomodoroStore'
+import { motion } from 'framer-motion'
 
 const daysOfWeek = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
@@ -187,7 +188,11 @@ const TimeLinePage = () => {
     };
 
     return (
-        <div className='flex flex-col gap-6'>
+        <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className='flex flex-col gap-6'>
             <div className='flex justify-between items-center gap-3'>
                 <h3 className=' font-medium'>◉ Organize seus horários de estudo</h3>
                 <div className='flex gap-3'>
@@ -517,7 +522,7 @@ const TimeLinePage = () => {
                     <button>close</button>
                 </form>
             </dialog>
-        </div>
+        </motion.div>
     )
 }
 
