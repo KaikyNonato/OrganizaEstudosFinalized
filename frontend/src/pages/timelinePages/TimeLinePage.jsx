@@ -212,7 +212,7 @@ const TimeLinePage = () => {
                     const isToday = day === todayName;
 
                     return (
-                        <div key={day} className={`flex flex-col gap-3 border rounded-lg p-6 shadow-md ${isToday ? 'border-success  border-2' : 'border-base-content/20'}`}>
+                        <div key={day} className={`flex flex-col gap-3 border rounded-lg p-6 shadow-md ${isToday ? 'border-primary  border-2' : 'border-base-content/20'}`}>
                             <div className=''>
                                 <h2 className='font-semibold  '>{day}</h2>
                             </div>
