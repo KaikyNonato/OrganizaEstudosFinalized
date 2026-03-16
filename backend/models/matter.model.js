@@ -18,6 +18,8 @@ const matterSchema = new mongoose.Schema({
 
 }, { timestamps: true })
 
+matterSchema.index({ user_id: 1 });
+
 const Matter = mongoose.model("Matter", matterSchema);
 
 export default Matter;
