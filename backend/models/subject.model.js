@@ -51,6 +51,8 @@ const subjectSchema = new mongoose.Schema({
     }
 }, { timestamps: true })
 
+subjectSchema.index({ matter_id: 1 });
+
 const Subject = mongoose.model("Subject", subjectSchema);
 
 export default Subject;
