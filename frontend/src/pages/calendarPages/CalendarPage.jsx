@@ -169,7 +169,7 @@ const Calander = () => {
                             onClick={() => handleDayClick(cell)}
                             className={`min-h-[60px] sm:min-h-[120px] p-1 sm:p-2 border-b border-r border-base-content/10 transition-colors
                                 ${cell.empty ? 'bg-base-200/30' : 'hover:bg-base-200/50 cursor-pointer'} 
-                                ${cell.isToday ? 'bg-primary/5' : ''}
+                                ${cell.isToday ? 'bg-primary/5 border-primary border' : ''}
                             `}
                         >
                             {!cell.empty && (
