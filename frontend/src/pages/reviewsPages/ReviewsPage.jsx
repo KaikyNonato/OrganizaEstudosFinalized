@@ -6,6 +6,7 @@ import { API_URL } from '../../../API_URL'
 import { useAuthStore } from '../../store/authStore'
 import { useMatterStore } from '../../store/matterStore'
 import { Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
 
 const Countdown = ({ targetDate, textSize = "text-sm" }) => {
     const [timeLeft, setTimeLeft] = useState("");
@@ -39,7 +40,7 @@ const Countdown = ({ targetDate, textSize = "text-sm" }) => {
                 const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
                 if (days > 0) {
-                    setTimeLeft(`${days +1} dia${days >= 1 ? 's' : ''}`); //!se a logica estiver errado é so tirar o +1 e o =
+                    setTimeLeft(`${days + 1} dia${days >= 1 ? 's' : ''}`); //!se a logica estiver errado é so tirar o +1 e o =
                 } else if (hours > 0) {
                     setTimeLeft(`${hours} hora${hours > 1 ? 's' : ''}`);
                 }
@@ -57,7 +58,7 @@ const Countdown = ({ targetDate, textSize = "text-sm" }) => {
                 const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
                 if (days > 0) {
-                    setTimeLeft(`${days+1} dia${days >= 1 ? 's' : ''}`); //!se a logica estiver errado é so tirar o +1 e o =
+                    setTimeLeft(`${days + 1} dia${days >= 1 ? 's' : ''}`); //!se a logica estiver errado é so tirar o +1 e o =
                 } else if (hours > 0) {
                     setTimeLeft(`${hours} hora${hours > 1 ? 's' : ''}`);
                 } else {
@@ -123,7 +124,11 @@ const ReviewsPage = () => {
     }
 
     return (
-        <div className='flex flex-col gap-6'>
+        <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className='flex flex-col gap-6'>
             <p className='font-medium'>◉ Revisões espaçadas de 24h, 7 e 30 dias</p>
             <div className='flex flex-col gap-6'>
 
@@ -356,7 +361,7 @@ const ReviewsPage = () => {
                     <button>close</button>
                 </form>
             </dialog>
-        </div>
+        </motion.div>
     )
 }
 
