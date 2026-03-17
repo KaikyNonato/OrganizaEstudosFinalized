@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import axios, { all } from 'axios'
-import { Clock, CircleCheck, FileText, Paperclip } from 'lucide-react'
+import { Clock, CircleCheck, FileText, Paperclip, Undo2, Loader } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { API_URL } from '../../../API_URL'
 import { useAuthStore } from '../../store/authStore'
 import { useMatterStore } from '../../store/matterStore'
-import { Link } from 'react-router-dom'
+import { Await, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 
 const Countdown = ({ targetDate, textSize = "text-sm" }) => {
@@ -92,7 +92,9 @@ const ReviewsPage = () => {
         }
     }, [isAuthenticated, fetchAllSubjects])
 
+    const [concluding, setConcluding] = useState(null)
     const handleConclude = async (id, review) => {
+        setConcluding(`${id}-${review}`)
         try {
             const response = await axios.put(API_URL + `/subject/concluded-review/${id}/${review}`, {}, { withCredentials: true })
             if (response.data.success) {
@@ -102,6 +104,26 @@ const ReviewsPage = () => {
         } catch (error) {
             console.error("Erro ao concluir revisão:", error)
             toast.error("Erro ao concluir revisão")
+        } finally {
+            setConcluding(null)
+        }
+    }
+    const [undoing, setUndoing] = useState(null);
+
+    const handleUndoCompleted = async (id, review) => {
+        setUndoing(`${id}-${review}`);
+        try {
+            const response = await axios.put(API_URL + `/subject/undo-review/${id}/${review}`, {}, { withCredentials: true })
+            if (response.data.success) {
+                toast.success("Revisão desmarcada")
+                fetchAllSubjects(true)
+            }
+
+        } catch (error) {
+            console.error("Erro ao desmarcar revisão:", error)
+            toast.error("Erro ao desmarcar revisão")
+        } finally {
+            setUndoing(null);
         }
     }
 
@@ -127,9 +149,9 @@ const ReviewsPage = () => {
 
 
     const allConcludedReviews = subjects.reduce((acc, subject) => {
-        if (subject.review1_concluded) acc.push({ subject, label: "24 Horas", key: "r1" });
-        if (subject.review2_concluded) acc.push({ subject, label: "7 Dias", key: "r2" });
-        if (subject.review3_concluded) acc.push({ subject, label: "30 Dias", key: "r3" });
+        if (subject.review1_concluded) acc.push({ subject, label: "24 Horas", key: "r1", review: "review1" });
+        if (subject.review2_concluded) acc.push({ subject, label: "7 Dias", key: "r2", review: "review2" });
+        if (subject.review3_concluded) acc.push({ subject, label: "30 Dias", key: "r3", review: "review3" });
         return acc;
     }, []);
 
@@ -167,7 +189,15 @@ const ReviewsPage = () => {
                                     <Countdown targetDate={subject.review1} textSize="text-xs" />
                                 </div>
                                 {isAuthenticated && (
-                                    <button onClick={(e) => { e.stopPropagation(); handleConclude(subject._id, "review1") }} className='btn btn-soft btn-sm'><CircleCheck size={15} />Feito</button>
+                                    <button disabled={concluding === `${subject._id}-review1`} onClick={(e) => { e.stopPropagation(); handleConclude(subject._id, "review1") }} className='btn btn-soft btn-sm'>
+                                        {concluding !== `${subject._id}-review1` ? (
+                                            <div className='flex gap-2 justify-between items-center'>
+                                                <CircleCheck size={15}></CircleCheck> <span className='max-sm:hidden'>Feito</span>
+                                            </div>
+                                        ) : (
+                                            <Loader className='animate-spin' />
+                                        )}
+                                    </button>
                                 )}
                             </div>
                         </div>
@@ -199,7 +229,15 @@ const ReviewsPage = () => {
                                     <div className='text-base-content/40 '>
                                         <Countdown targetDate={subject.review2} textSize="text-xs" />
                                     </div>
-                                    <button onClick={(e) => { e.stopPropagation(); handleConclude(subject._id, "review2") }} className='btn btn-soft btn-sm'><CircleCheck size={15}></CircleCheck>Feito</button>
+                                    <button disabled={concluding === `${subject._id}-review2`} onClick={(e) => { e.stopPropagation(); handleConclude(subject._id, "review2") }} className='btn btn-soft btn-sm'>
+                                        {concluding !== `${subject._id}-review2` ? (
+                                            <div className='flex gap-2 justify-between items-center'>
+                                                <CircleCheck size={15}></CircleCheck> <span className='max-sm:hidden'>Feito</span>
+                                            </div>
+                                        ) : (
+                                            <Loader className='animate-spin' />
+                                        )}
+                                    </button>
                                 </div>
                             </div>
                         )))}
@@ -231,7 +269,16 @@ const ReviewsPage = () => {
                                     <div className='text-base-content/40 '>
                                         <Countdown targetDate={subject.review3} textSize="text-xs" />
                                     </div>
-                                    <button onClick={(e) => { e.stopPropagation(); handleConclude(subject._id, "review3") }} className='btn btn-soft btn-sm'><CircleCheck size={15}></CircleCheck>Feito</button>
+                                    <button disabled={concluding === `${subject._id}-review3`} onClick={(e) => { e.stopPropagation(); handleConclude(subject._id, "review3") }} className='btn btn-soft btn-sm'>
+                                        {concluding !== `${subject._id}-review3` ? (
+                                            <div className='flex gap-2 justify-between items-center'>
+                                                <CircleCheck size={15}></CircleCheck> <span className='max-sm:hidden'>Feito</span>
+                                            </div>
+                                        ) : (
+                                            <Loader className='animate-spin' />
+                                        )}
+
+                                    </button>
                                 </div>
                             </div>
                         )))}
@@ -249,7 +296,7 @@ const ReviewsPage = () => {
                             <span className='text-sm text-base-content/60'>Nenhuma revisão concluída</span>
                         ) : (
                             <>
-                                {allConcludedReviews.slice(0, visibleConcludedCount).map(({ subject, label, key }) => (
+                                {allConcludedReviews.slice(0, visibleConcludedCount).map(({ subject, label, key, review }) => (
                                     <div className='flex gap-2 border border-base-content/20 rounded-lg p-2 justify-between items-center cursor-pointer hover:bg-base-200/50 hover:shadow-md transition-shadow' key={`${subject._id}-${key}`} onClick={() => openSubjectModal(subject)}>
                                         <div className='flex items-center gap-2 min-w-0'>
                                             <div className={`rounded-full min-w-4 min-h-4 text-white ${subject.matter_id?.color === '#ff6467' ? 'bg-red-400' : subject.matter_id?.color === '#05df72' ? 'bg-green-400' : subject.matter_id?.color === '#50a2ff' ? 'bg-blue-400' : subject.matter_id?.color === '#ff8904' ? 'bg-orange-400' : 'bg-purple-400'}`}>
@@ -259,7 +306,22 @@ const ReviewsPage = () => {
                                                 <p className='text-sm text-base-content/60 truncate'>{subject.matter_id?.title}</p>
                                             </div>
                                         </div>
-                                        <span className='badge badge-ghost rounded max-sm:px-5 truncate'>{label}</span>
+                                        <div className='flex gap-2 justify-center items-center'>
+                                            <span className='badge badge-ghost rounded max-sm:px-5 truncate'>{label}</span>
+                                            <div>
+                                                <button disabled={undoing === `${subject._id}-${review}`} onClick={(e) => { e.stopPropagation(); handleUndoCompleted(subject._id, review) }} className='btn btn-soft btn-sm'>
+                                                    {undoing !== `${subject._id}-${review}` ?
+                                                        <div className='flex gap-2 justify-between items-center'>
+                                                            <Undo2 size={15} /> <span className='max-sm:hidden'>Desfazer</span>
+                                                        </div>
+
+                                                        : <Loader size={15} className='animate-spin ' />}
+
+
+                                                </button>
+                                            </div>
+
+                                        </div>
                                     </div>
                                 ))}
 
