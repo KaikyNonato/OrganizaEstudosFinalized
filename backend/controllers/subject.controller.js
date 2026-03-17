@@ -235,6 +235,34 @@ export const concludedReview = async (req, res) => {
     }
 }
 
+export const UndoCompletedReview = async (req, res) => {
+    const { id } = req.params;
+    const { review } = req.params;
+
+    try {
+        const subject = await Subject.findById(id);
+
+        if (!subject) {
+            return res.status(400).json({ success: false, message: "Subject not found" });
+        }
+
+        if (review === "review1") {
+            subject.review1_concluded = false;
+        } else if (review === "review2") {
+            subject.review2_concluded = false;
+        } else if (review === "review3") {
+            subject.review3_concluded = false;
+        }
+
+        await subject.save();
+
+        res.status(200).json({ success: true, message: "Review desmarcada com sucesso" });
+        
+    } catch (error) {
+        
+    }
+}
+
 
 
 export const streamPdf = async (req, res) => {
