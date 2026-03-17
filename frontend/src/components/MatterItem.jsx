@@ -45,7 +45,7 @@ const MatterItem = ({ matter }) => {
     const [deletingFileId, setDeletingFileId] = useState(null)
     const [isCreatingSubject, setIsCreatingSubject] = useState(false)
     const [isUpdatingSubject, setIsUpdatingSubject] = useState(false)
-    const [isDeletingSubject, setIsDeletingSubject] = useState(false)
+    const [isDeletingSubject, setIsDeletingSubject] = useState(null)
     const [isSavingSubject, setIsSavingSubject] = useState(false)
     const [isDeletingMatter, setIsDeletingMatter] = useState(false)
 
@@ -231,7 +231,7 @@ const MatterItem = ({ matter }) => {
     }
 
     const handleDeleteSubject = async (subjectId) => {
-        setIsDeletingSubject(true)
+        setIsDeletingSubject(subjectId)
 
         try {
             const response = await axios.delete(API_URL + `/subject/delete-subject/${subjectId}`, { withCredentials: true })
@@ -242,7 +242,7 @@ const MatterItem = ({ matter }) => {
         } catch (error) {
             toast.error(error.response?.data?.message || "Erro ao deletar assunto")
         } finally {
-            setIsDeletingSubject(false)
+            setIsDeletingSubject(null)
         }
     }
 
@@ -372,8 +372,8 @@ const MatterItem = ({ matter }) => {
                                                         <PencilLine className={`${matter.color === '#ff6467' ? 'hover:text-red-400' : matter.color === '#05df72' ? 'hover:text-green-400' : matter.color === '#50a2ff' ? 'hover:text-blue-400' : matter.color === '#ff8904' ? 'hover:text-orange-400' : 'hover:text-purple-400'}`} size={15}></PencilLine>
                                                     </button>
 
-                                                    <button disabled={isDeletingSubject} onClick={() => handleDeleteSubject(subject._id)} className='btn btn-sm btn-ghost pl-0 hover:bg-transparent hover:border-transparent hover:shadow-none' title='Deletar Assunto'>
-                                                        {isDeletingSubject ? <Loader size={15} className="animate-spin" /> : <Trash className='hover:text-red-400 ' size={15}></Trash>}
+                                                    <button disabled={isDeletingSubject === subject._id} onClick={() => handleDeleteSubject(subject._id)} className='btn btn-sm btn-ghost pl-0 hover:bg-transparent hover:border-transparent hover:shadow-none' title='Deletar Assunto'>
+                                                        {isDeletingSubject === subject._id ? <Loader size={15} className="animate-spin" /> : <Trash className='hover:text-red-400 ' size={15}></Trash>}
                                                     </button>
                                                 </div>
                                             </div>
