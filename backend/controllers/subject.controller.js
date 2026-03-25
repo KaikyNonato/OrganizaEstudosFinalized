@@ -60,7 +60,7 @@ export const getAllSubjects = async (req, res) => {
 
 export const updateSubject = async (req, res) => {
     const { id } = req.params;
-    const { title, status, review1, review2, review3 } = req.body; // <-- RECEBE AS DATAS AQUI
+    const { title, status, review1, review2, review3, link } = req.body;
 
     try {
         const subject = await Subject.findById(id);
@@ -70,6 +70,9 @@ export const updateSubject = async (req, res) => {
         }
 
         if (title) subject.title = title;
+
+        // Atualiza o link. A verificação `!== undefined` permite que um link seja limpo (enviando uma string vazia).
+        if (link !== undefined) subject.link = link;
 
         // NOVO: Atualiza as datas manualmente se vierem na requisição
         if (review1) subject.review1 = review1;
