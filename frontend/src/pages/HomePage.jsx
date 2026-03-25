@@ -8,7 +8,7 @@ import { motion } from 'framer-motion'
 
 const daysOfWeek = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
-const DashboardPage = () => {
+const HomePage = () => {
     const { isAuthenticated, user, checkAuth } = useAuthStore()
     const [mattersCount, setMattersCount] = useState(0)
     const [pendingCount, setPendingCount] = useState(0)
@@ -440,4 +440,4 @@ const DashboardPage = () => {
     )
 }
 
-export default DashboardPage
+export default HomePage
