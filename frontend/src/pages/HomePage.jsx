@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useAuthStore } from '../store/authStore'
-import { BookOpenText, CircleCheck, Clock, ListTodo, TrendingUp, Plus, X, Link2 } from 'lucide-react'
+import { BookOpenText, CircleCheck, Clock, ListTodo, TrendingUp, Plus, X, Link2, Calendar as CalendarIcon, RotateCcw } from 'lucide-react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { API_URL } from '../../API_URL'
@@ -8,13 +8,14 @@ import { motion } from 'framer-motion'
 
 const daysOfWeek = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
-const HomePage = () => {
+const DashboardPage = () => {
     const { isAuthenticated, user, checkAuth } = useAuthStore()
     const [mattersCount, setMattersCount] = useState(0)
     const [pendingCount, setPendingCount] = useState(0)
     const [completedCount, setCompletedCount] = useState(0)
     const [todaysSchedule, setTodaysSchedule] = useState([])
     const [studiedTime, setStudiedTime] = useState(0)
+    const [todaysReviews, setTodaysReviews] = useState([])
 
     // ESTADOS PARA OS LINKS RÁPIDOS
     const [links, setLinks] = useState(user?.quickLinks || [])
@@ -47,6 +48,8 @@ const HomePage = () => {
                     const subjects = subjectsResponse.data.subjects;
                     let pending = 0;
                     let completed = 0;
+                    const today = new Date();
+                    const todayReviewsArr = [];
 
                     subjects.forEach(sub => {
                         if (sub.status === 'CONCLUIDO') {
@@ -54,10 +57,25 @@ const HomePage = () => {
                         } else {
                             pending++;
                         }
+
+                        const checkReview = (revDate, isConcluded) => {
+                            if (!revDate || isConcluded) return false;
+                            const d = new Date(revDate);
+                            return d.getDate() === today.getDate() &&
+                                d.getMonth() === today.getMonth() &&
+                                d.getFullYear() === today.getFullYear();
+                        }
+
+                        if (checkReview(sub.review1, sub.review1_concluded) ||
+                            checkReview(sub.review2, sub.review2_concluded) ||
+                            checkReview(sub.review3, sub.review3_concluded)) {
+                            todayReviewsArr.push(sub);
+                        }
                     });
 
                     setPendingCount(pending);
                     setCompletedCount(completed);
+                    setTodaysReviews(todayReviewsArr);
                 }
 
                 if (timelineResponse.data.success) {
@@ -128,6 +146,40 @@ const HomePage = () => {
             toast.error("Erro ao remover link.");
         }
     }
+
+    const renderCalendar = () => {
+        const today = new Date();
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
+        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+        const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+
+        const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
+        const days = [];
+        for (let i = 0; i < firstDayOfMonth; i++) {
+            days.push(<div key={`empty-${i}`} className="w-8 h-8"></div>);
+        }
+        for (let i = 1; i <= daysInMonth; i++) {
+            const isToday = i === today.getDate();
+            days.push(
+                <div key={i} className={`w-8 h-8 flex items-center justify-center rounded-full text-sm ${isToday ? 'bg-primary text-primary-content font-bold shadow-md' : 'hover:bg-base-200 cursor-default'}`}>
+                    {i}
+                </div>
+            );
+        }
+
+        return (
+            <div className="flex flex-col items-center w-full">
+                <div className="font-bold text-lg mb-4 capitalize">{monthNames[currentMonth]} {currentYear}</div>
+                <div className="grid grid-cols-7 gap-x-2 gap-y-1 text-center w-full max-w-[280px]">
+                    {dayNames.map(day => <div key={day} className="w-8 h-8 flex items-center justify-center text-xs font-bold text-base-content/50">{day}</div>)}
+                    {days}
+                </div>
+            </div>
+        );
+    };
 
     return (
         <motion.div
@@ -249,6 +301,42 @@ const HomePage = () => {
                             )}
                         </div>
                     </div>
+
+
+                </div>
+
+                <div className='grid grid-cols-1 lg:grid-cols-4 gap-3'>
+
+
+                    <div className='flex flex-col gap-3 border border-base-content/20 p-6 rounded-lg shadow-md lg:col-span-3'>
+                        <div className='flex items-center justify-between'>
+                            <span className='font-bold'>Revisões de Hoje</span>
+                            <RotateCcw size={20} />
+                        </div>
+                        <div className='flex flex-col gap-2 overflow-y-auto max-h-[200px]'>
+                            {todaysReviews.length > 0 ? (
+                                todaysReviews.map((sub) => (
+                                    <div key={sub._id} className='flex items-center justify-between bg-base-200/50 p-2 rounded-lg border border-base-content/5'>
+                                        <div className='flex items-center gap-2'>
+                                            <div className={`w-2 h-2 rounded-full`} style={{ backgroundColor: sub.matter_id?.color || '#ccc' }}></div>
+                                            <span className='font-medium text-sm truncate max-w-[150px] sm:max-w-[250px]'>{sub.title}</span>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <span className='text-sm text-base-content/60 italic'>Nenhuma revisão para hoje.</span>
+                            )}
+                        </div>
+                    </div>
+                    <div className='flex flex-col gap-3 border border-base-content/20 p-6 rounded-lg shadow-md lg:col-span-1'>
+                        <div className='flex items-center justify-between mb-2'>
+                            <span className='font-bold'>Calendário</span>
+                            <CalendarIcon size={20} />
+                        </div>
+                        <div className='flex justify-center'>
+                            {renderCalendar()}
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -352,4 +440,4 @@ const HomePage = () => {
     )
 }
 
-export default HomePage
+export default DashboardPage
