@@ -319,7 +319,7 @@ const HomePage = () => {
                                     <div key={sub._id} className='flex items-center justify-between bg-base-200/50 p-2 rounded-lg border border-base-content/5'>
                                         <div className='flex items-center gap-2'>
                                             <div className={`w-2 h-2 rounded-full`} style={{ backgroundColor: sub.matter_id?.color || '#ccc' }}></div>
-                                            <span className='font-medium text-sm truncate max-w-[550px] sm:max-w-[250px]'>{sub.title}</span>
+                                            <span className='font-medium text-sm truncate max-w-[150px] sm:max-w-[550px]'>{sub.title}</span>
                                         </div>
                                     </div>
                                 ))
