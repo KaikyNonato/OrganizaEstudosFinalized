@@ -48,6 +48,10 @@ const subjectSchema = new mongoose.Schema({
     review3_concluded: {
         type: Boolean,
         default: false
+    },
+    link: {
+        type: String,
+        default: null
     }
 }, { timestamps: true })
 
