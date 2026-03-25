@@ -6,8 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
     PencilLine, Trash, ChevronUp, ChevronDown, ArrowUp, ArrowDown,
     CircleX, CircleCheck, Paperclip, FileText, Loader,
-    Plus
-} from 'lucide-react'
+    Plus, LinkIcon} from 'lucide-react'
 
 import { Link } from 'react-router-dom';
 import { API_URL } from '../../API_URL'
@@ -40,6 +39,7 @@ const MatterItem = ({ matter }) => {
     const [editReviewDate, setEditReviewDate] = useState('')
     const [editTitleMatter, setEditTitleMatter] = useState('')
     const [editColorMatter, setEditColorMatter] = useState('')
+    const [editLink, setEditLink] = useState('')
 
     // Loading States
     const [deletingFileId, setDeletingFileId] = useState(null)
@@ -73,6 +73,7 @@ const MatterItem = ({ matter }) => {
     const openEditModal = (subject) => {
         setEditingSubject(subject)
         setEditTitle(subject.title)
+        setEditLink(subject.link || '') // Carrega o link atual para edição
 
         if (subject.review1 && subject.status === 'CONCLUIDO') {
             const d = new Date(subject.review1);
@@ -188,7 +189,17 @@ const MatterItem = ({ matter }) => {
         if (!editingSubject || !editTitle.trim()) return
 
         setIsSavingSubject(true)
-        const payload = { title: editTitle }
+
+        // Formatação do link antes de salvar
+        let finalLink = editLink.trim()
+        if (finalLink && !/^https?:\/\//i.test(finalLink)) {
+            finalLink = 'https://' + finalLink
+        }
+
+        const payload = { 
+            title: editTitle,
+            link: finalLink
+        }
 
         if (editReviewDate && editingSubject.status === 'CONCLUIDO') {
             const [year, month, day] = editReviewDate.split('-')
@@ -354,6 +365,19 @@ const MatterItem = ({ matter }) => {
                                                         <option value="CONCLUIDO">CONCLUIDO</option>
                                                     </select>
 
+                                                    {/* BOTÃO DE LINK ATUALIZADO PARA ABRIR NOVA ABA */}
+                                                    {subject.link && (
+                                                        <a 
+                                                            href={subject.link.startsWith('http') ? subject.link : `https://${subject.link}`}
+                                                            target="_blank" 
+                                                            rel="noopener noreferrer" 
+                                                            className={`btn btn-sm btn-ghost hover:bg-transparent hover:border-transparent hover:shadow-none p-0 ${matter.color === '#ff6467' ? 'text-red-400 hover:text-red-500' : matter.color === '#05df72' ? 'text-green-400 hover:text-green-500' : matter.color === '#50a2ff' ? 'text-blue-400 hover:text-blue-500' : matter.color === '#ff8904' ? 'text-orange-400 hover:text-orange-500' : 'text-purple-400 hover:text-purple-500'}`} 
+                                                            title="Acessar Link"
+                                                        >
+                                                            <LinkIcon size={15}/>
+                                                        </a>
+                                                    )}
+
                                                     <label
                                                         className={`cursor-pointer transition-colors ${subject.attachments?.length >= 3 ? 'text-gray-400 opacity-50 cursor-not-allowed' : ''}`}
                                                         title={subject.attachments?.length >= 3 ? 'Limite de 3 arquivos atingido' : 'Anexar PDF'}
@@ -403,7 +427,6 @@ const MatterItem = ({ matter }) => {
                                                                 {subject.attachments.map(file => (
                                                                     <Link
                                                                         key={file.public_id}
-                                                                        // Passamos o subject._id e o public_id codificado (por causa das barras /)
                                                                         to={`/view-pdf/${subject._id}/${encodeURIComponent(file.public_id)}`}
                                                                         className='hover:underline hover:text-primary truncate font-normal'
                                                                         title={file.name}
@@ -457,7 +480,7 @@ const MatterItem = ({ matter }) => {
                 </div>
             )}
 
-            {/* MODAL: DETALHES DO ASSUNTO */}
+            {/* MODAL: DETALHES DO ASSUNTO (Mantido igual) */}
             <dialog id={`details_subject_modal_${matter._id}`} className="modal">
                 <div className="modal-box">
                     {viewingSubject && (
@@ -513,6 +536,15 @@ const MatterItem = ({ matter }) => {
                                     </div>
                                 )}
 
+                                {viewingSubject.link && (
+                                    <div className="flex items-center gap-2 text-sm mb-3">
+                                        <span className="font-semibold flex items-center gap-1"><LinkIcon size={16}/> Link:</span>
+                                        <a href={viewingSubject.link} target="_blank" rel="noopener noreferrer" className="link link-primary truncate max-w-[200px] sm:max-w-[300px]">
+                                            {viewingSubject.link}
+                                        </a>
+                                    </div>
+                                )}
+
                                 <div>
                                     <p className="font-semibold mb-2 flex items-center gap-2 text-sm">
                                         <Paperclip size={16} />
@@ -523,7 +555,6 @@ const MatterItem = ({ matter }) => {
                                             {viewingSubject.attachments.map(file => (
                                                 <Link
                                                     key={file.public_id}
-                                                    // Passamos o subject._id e o public_id codificado (por causa das barras /)
                                                     to={`/view-pdf/${viewingSubject._id}/${encodeURIComponent(file.public_id)}`}
                                                     className='flex items-center gap-2 p-2 border border-base-content/20 rounded hover:bg-base-200 transition-colors text-sm'
                                                     title={file.name}
@@ -574,6 +605,18 @@ const MatterItem = ({ matter }) => {
                                 className="input input-bordered w-full"
                                 value={editTitle}
                                 onChange={(e) => setEditTitle(e.target.value)}
+                            />
+                        </div>
+
+                        {/* NOVO CAMPO DE LINK AQUI */}
+                        <div className="form-control">
+                            <label className="label"><span className="label-text font-medium">Link Associado (Opcional)</span></label>
+                            <input
+                                type="url"
+                                placeholder="Ex: https://notebooklm.google.com"
+                                className="input input-bordered w-full"
+                                value={editLink}
+                                onChange={(e) => setEditLink(e.target.value)}
                             />
                         </div>
 
