@@ -289,10 +289,10 @@ const GoalsPage = () => {
                                     </div>
 
                                     <div className="flex gap-1">
-                                        <button onClick={() => openEditModal(goal)} className="btn btn-ghost btn-xs px-1 text-base-content/50 hover:text-primary" title="Editar Meta">
+                                        <button onClick={() => openEditModal(goal)} className=" btn-xs p-1 hover:text-primary" title="Editar Meta">
                                             <Pencil size={14} />
                                         </button>
-                                        <button onClick={() => handleDeleteGoal(goal._id)} className="btn btn-ghost btn-xs px-1 text-base-content/50 hover:text-red-500" title="Excluir Meta">
+                                        <button onClick={() => handleDeleteGoal(goal._id)} className="btn-xs p-1 hover:text-error" title="Excluir Meta">
                                             <Trash size={14} />
                                         </button>
                                     </div>
