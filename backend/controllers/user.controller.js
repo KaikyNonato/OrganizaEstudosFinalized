@@ -124,3 +124,47 @@ export const updateUserAdmin = async (req, res) => {
         res.status(500).json({ success: false, message: "Erro no servidor" });
     }
 }
+
+export const deleteUserAdmin = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        // 1. Verifica se quem está pedindo é realmente um Admin
+        const requester = await User.findById(req.userId);
+        if (!requester || !requester.isAdmin) {
+            return res.status(403).json({ success: false, message: "Acesso negado. Apenas administradores." });
+        }
+
+        // 2. Encontra o usuário a ser deletado
+        const userToDelete = await User.findById(id);
+        if (!userToDelete) {
+            return res.status(404).json({ success: false, message: "Usuário não encontrado." });
+        }
+
+        // 3. Buscar todas as matérias do usuário
+        const matters = await Matter.find({ user_id: id });
+        const matterIds = matters.map(m => m._id);
+
+        // 4. Buscar todos os assuntos dessas matérias
+        const subjects = await Subject.find({ matter_id: { $in: matterIds } });
+
+        // 5. Deletar arquivos do Cloudinary de todos os assuntos encontrados
+        for (const subject of subjects) {
+            if (subject.attachments && subject.attachments.length > 0) {
+                const deletePromises = subject.attachments.map(file => cloudinary.uploader.destroy(file.public_id));
+                await Promise.all(deletePromises);
+            }
+        }
+
+        // 6. Deletar registros do banco de dados em cascata
+        await Subject.deleteMany({ matter_id: { $in: matterIds } });
+        await Matter.deleteMany({ user_id: id });
+        await User.findByIdAndDelete(id);
+
+        res.status(200).json({ success: true, message: "Usuário e todos os seus dados foram excluídos com sucesso." });
+
+    } catch (error) {
+        console.log("error in deleteUserAdmin ", error);
+        res.status(500).json({ success: false, message: "Erro no servidor ao excluir usuário" });
+    }
+}
