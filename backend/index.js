@@ -10,6 +10,7 @@ import userRoutes from './routes/user.route.js';
 import matterRoutes from './routes/matter.route.js';
 import subjectRoutes from './routes/subject.route.js';
 import timeLineRoutes from './routes/timeLine.route.js';
+import goalRoutes from './routes/goal.route.js';
 
 
 
@@ -36,6 +37,7 @@ app.use("/api/user", userRoutes)
 app.use("/api/matter", matterRoutes)
 app.use("/api/subject", subjectRoutes)
 app.use("/api/timeline", timeLineRoutes)
+app.use("/api/goal", goalRoutes)
 
 
 
