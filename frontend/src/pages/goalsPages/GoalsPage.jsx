@@ -231,7 +231,7 @@ const GoalsPage = () => {
         <div className='flex flex-col gap-6'>
             <div className="flex justify-between items-center gap-2">
                 <span>◉ Metas (Questões / Leitura)</span>
-                <button className='btn  btn-sm' onClick={() => document.getElementById('add_goal_modal').showModal()}>
+                <button className='btn' onClick={() => document.getElementById('add_goal_modal').showModal()}>
                     <Plus size={18} /> Nova Meta
                 </button>
             </div>
