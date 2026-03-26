@@ -22,6 +22,7 @@ import PomodoroPage from './pages/pomodoroPages/PomodoroPage'
 import AdminPage from './pages/adminPages/AdminPage'
 import ViewPdf from './pages/viewfilesPages/ViewPdf'
 import CalendarPage from './pages/calendarPages/CalendarPage'
+import GoalsPage from './pages/goalsPages/GoalsPage'
 
 const AdminRoute = () => {
   const { isAuthenticated, user } = useAuthStore();
@@ -103,6 +104,7 @@ function App() {
           <Route path='/cronograma' element={<TimeLinePage />} />
           <Route path='/pomodoro' element={<PomodoroPage />} />
           <Route path='/calendario' element={<CalendarPage />} />
+          <Route path='/metas' element={<GoalsPage />} />
         </Route>
 
         {/* Rotas de Administrador */}
