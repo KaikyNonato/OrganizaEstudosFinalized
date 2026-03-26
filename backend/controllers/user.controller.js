@@ -1,6 +1,7 @@
 import User from '../models/user.model.js';
 import Matter from '../models/matter.model.js';
 import Subject from '../models/subject.model.js';
+import cloudinary from '../utils/cloudinary.js';
 
 // FUNÇÔES DE USUÁRIO
 export const updateUser = async (req, res) => {
