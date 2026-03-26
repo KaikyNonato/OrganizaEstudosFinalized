@@ -11,7 +11,7 @@ const AdminPage = () => {
     const [users, setUsers] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Estado para guardar o utilizador que está a ser editado no momento
+    // Estado para guardar o usuário que está a ser editado no momento
     const [editingUser, setEditingUser] = useState(null);
     const [viewingUser, setViewingUser] = useState(null);
     const [expandedMatters, setExpandedMatters] = useState({});
@@ -25,7 +25,7 @@ const AdminPage = () => {
                 setUsers(response.data.users);
             }
         } catch (error) {
-            toast.error("Erro ao procurar utilizadores ou acesso negado.");
+            toast.error("Erro ao procurar usuário ou acesso negado.");
             console.error(error);
         } finally {
             setIsLoading(false);
@@ -51,7 +51,7 @@ const AdminPage = () => {
         return `${mins}m`;
     };
 
-    // Abre o modal e carrega os dados do utilizador selecionado
+    // Abre o modal e carrega os dados do usuário selecionado
     const openEditModal = (user) => {
         setEditingUser({ ...user });
         document.getElementById('edit_user_modal').showModal();
@@ -71,11 +71,11 @@ const AdminPage = () => {
     };
 
     const handleDeleteUser = async (id) => {
-        if (!window.confirm("Tem certeza que deseja apagar este utilizador? Esta ação é irreversível e apagará todos os seus dados.")) {
+        if (!window.confirm("Tem certeza que deseja apagar este usuário? Esta ação é irreversível e apagará todos os seus dados.")) {
             return;
         }
 
-        const toast_id = toast.loading("Apagando utilizador...");
+        const toast_id = toast.loading("Apagando usuário...");
         try {
             const response = await axios.delete(`${API_URL}/user/admin/delete-user/${id}`);
             if (response.data.success) {
@@ -83,7 +83,7 @@ const AdminPage = () => {
                 setUsers(users.filter(u => u._id !== id));
             }
         } catch (error) {
-            console.error("Erro ao apagar utilizador:", error);
+            console.error("Erro ao apagar usuário:", error);
             toast.error(error.response?.data?.message || "Erro ao apagar usuario!", { id: toast_id });
         }
     }
@@ -166,7 +166,7 @@ const AdminPage = () => {
                         <ShieldAlert className="text-primary" size={32} />
                         Painel Administrativo
                     </h2>
-                    <p className='text-base-content/60 mt-1'>Gerencie os utilizadores registados na plataforma.</p>
+                    <p className='text-base-content/60 mt-1'>Gerencie os usuários registados na plataforma.</p>
                 </div>
 
                 <div className='bg-base-200/60 px-6 py-3 rounded-lg flex items-center gap-4 border border-base-content/20 shadow-sm'>
@@ -174,7 +174,7 @@ const AdminPage = () => {
                         <Users size={24} />
                     </div>
                     <div>
-                        <p className='text-sm text-base-content/60 font-medium'>Total de Utilizadores</p>
+                        <p className='text-sm text-base-content/60 font-medium'>Total de usuários</p>
                         <p className='text-2xl font-bold'>{users.length}</p>
                     </div>
                 </div>
@@ -196,7 +196,7 @@ const AdminPage = () => {
                 />
             </motion.div>
 
-            {/* Tabela de Utilizadores */}
+            {/* Tabela de usuários */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -207,7 +207,7 @@ const AdminPage = () => {
                     <table className="table table-zebra w-full">
                         <thead className="bg-base-200/50 text-base-content/70 text-sm">
                             <tr>
-                                <th>Utilizador</th>
+                                <th>usuário</th>
                                 <th>Contato</th>
                                 <th>Status</th>
                                 <th>Horas Estudadas</th>
@@ -221,13 +221,13 @@ const AdminPage = () => {
                                 <tr>
                                     <td colSpan="7" className="text-center py-10 text-base-content/50">
                                         <span className="loading loading-spinner loading-md"></span>
-                                        <p className="mt-2">A procurar utilizadores...</p>
+                                        <p className="mt-2">A procurar usuários...</p>
                                     </td>
                                 </tr>
                             ) : users.length === 0 ? (
                                 <tr>
                                     <td colSpan="7" className="text-center py-10 text-base-content/50">
-                                        Nenhum utilizador encontrado.
+                                        Nenhum usuário encontrado.
                                     </td>
                                 </tr>
                             ) : filteredUsers.length === 0 ? (
@@ -293,14 +293,14 @@ const AdminPage = () => {
                                             <button
                                                 onClick={() => openEditModal(u)}
                                                 className="btn btn-ghost btn-sm text-base-content/60 "
-                                                title="Editar Utilizador"
+                                                title="Editar usuário"
                                             >
                                                 <Pencil size={16} /> Editar
                                             </button>
                                             <button
                                                 onClick={() => handleDeleteUser(u._id)}
                                                 className="btn btn-ghost btn-sm text-error"
-                                                title="Apagar Utilizador"
+                                                title="Apagar usuário"
                                             >
                                                 <Trash2 size={16} /> Apagar
                                             </button>
@@ -313,11 +313,11 @@ const AdminPage = () => {
                 </div>
             </motion.div>
 
-            {/* Modal de Edição do Utilizador */}
+            {/* Modal de Edição do usuário */}
             <dialog id="edit_user_modal" className="modal">
                 <div className="modal-box">
                     <h3 className="font-bold text-lg mb-6 flex items-center gap-2">
-                        <Pencil size={20} className="text-primary" /> Editar Utilizador
+                        <Pencil size={20} className="text-primary" /> Editar usuário
                     </h3>
 
                     {editingUser && (
