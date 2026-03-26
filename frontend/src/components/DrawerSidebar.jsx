@@ -1,5 +1,5 @@
 import React from 'react'
-import { Clock, BookOpenText, RotateCcw, Calendar, Home, PanelLeftOpen } from 'lucide-react'
+import { Clock, BookOpenText, RotateCcw, Calendar, Home, PanelLeftOpen, Goal } from 'lucide-react'
 import { NavLink, useLocation, Outlet } from 'react-router-dom' // Substituímos Link por NavLink
 
 const DrawerSidebar = () => {
@@ -12,6 +12,7 @@ const DrawerSidebar = () => {
             case '/revisoes': return 'Revisões'
             case '/cronograma': return 'Cronograma'
             case '/pomodoro': return 'Pomodoro'
+            case '/metas' : return 'Metas'
             default: return 'OrganizaEstudos'
         }
     }
@@ -65,6 +66,13 @@ const DrawerSidebar = () => {
                                 <NavLink to='/revisoes' className={navLinkClass} data-tip="Revisões">
                                     <RotateCcw size={17} />
                                     <span className="is-drawer-close:hidden">Revisões</span>
+                                </NavLink>
+                            </li>
+
+                            <li>
+                                <NavLink to='/metas' className={navLinkClass} data-tip="Revisões">
+                                    <Goal size={17} />
+                                    <span className="is-drawer-close:hidden">Metas</span>
                                 </NavLink>
                             </li>
 
