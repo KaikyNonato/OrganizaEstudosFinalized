@@ -87,8 +87,6 @@ const GoalsPage = () => {
     const [editQuantity, setEditQuantity] = useState('');
     const [editDaysOfWeek, setEditDaysOfWeek] = useState([]);
 
-    const [updatingDays, setUpdatingDays] = useState([]);
-
     const fetchGoals = useCallback(async () => {
         try {
             const response = await axios.get(API_URL + "/goal/get-goals", { withCredentials: true });
@@ -171,15 +169,6 @@ const GoalsPage = () => {
     }
 
     const toggleDayCompletion = async (goalId, dateStr) => {
-        // 1. Cria uma "chave" única para esse botão (Ex: "12345-2026-03-26")
-        const lockKey = `${goalId}-${dateStr}`;
-
-        // 2. Se esse botão já estiver na lista de "atualizando", ignora o clique (Bloqueia o Spam!)
-        if (updatingDays.includes(lockKey)) return;
-
-        // 3. Trava o botão imediatamente
-        setUpdatingDays(prev => [...prev, lockKey]);
-
         try {
             setGoals(prev => prev.map(g => {
                 if (g._id !== goalId) return g;
@@ -188,6 +177,7 @@ const GoalsPage = () => {
                     ? [...g.completedDates, dateStr]
                     : g.completedDates.filter(d => d !== dateStr);
 
+                // Atualiza também o contador lifetime localmente para feedback imediato
                 const newLifetime = isAdding ? (g.lifetimeCompleted || 0) + 1 : Math.max(0, (g.lifetimeCompleted || 0) - 1);
 
                 return { ...g, completedDates: newDates, lifetimeCompleted: newLifetime };
@@ -197,9 +187,6 @@ const GoalsPage = () => {
         } catch (error) {
             toast.error("Erro ao atualizar status");
             fetchGoals();
-        } finally {
-            // 4. Destrava o botão quando o backend responder (dando certo ou errado)
-            setUpdatingDays(prev => prev.filter(key => key !== lockKey));
         }
     }
 
@@ -314,8 +301,6 @@ const GoalsPage = () => {
                                             const isPast = dateStr < todayStr;
                                             const isMissed = isPast && !isCompleted;
 
-                                            const isUpdating = updatingDays.includes(`${goal._id}-${dateStr}`);
-
                                             if (!isActive) {
                                                 return (
                                                     <div key={day.index} className="w-8 h-8 rounded-lg bg-base-200/50 text-base-content/30 flex items-center justify-center text-xs border border-base-content/5">
@@ -328,13 +313,14 @@ const GoalsPage = () => {
                                                 <button
                                                     key={day.index}
                                                     onClick={() => toggleDayCompletion(goal._id, dateStr)}
-                                                    disabled={isPast || isUpdating} // Bloqueia se for passado OU se estiver salvando
-                                                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all transform shadow-sm 
-                                                        ${isUpdating ? 'opacity-50 cursor-wait animate-pulse' : ''} 
-                                                        ${isCompleted && !isUpdating ? `bg-success text-white shadow-success/30 
-                                                            ${isPast ? 'opacity-80 cursor-not-allowed' : 'hover:scale-105 active:scale-95'}` :
-                                                            isMissed && !isUpdating ? 'bg-error text-white shadow-error/30 opacity-80 cursor-not-allowed' :
-                                                                !isUpdating ? 'bg-base-200 text-base-content hover:bg-base-300 border border-base-content/20 hover:scale-105 active:scale-95' : ''}`}
+                                                    disabled={isPast}
+                                                    className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-all transform shadow-sm
+                                                        ${isCompleted ?
+                                                            `bg-success text-white shadow-success/30 ${isPast ? 'opacity-80 cursor-not-allowed' : 'hover:scale-105 active:scale-95'}` :
+                                                            isMissed ?
+                                                                'bg-error text-white shadow-error/30 opacity-80 cursor-not-allowed' :
+                                                                'bg-base-200 text-base-content hover:bg-base-300 border border-base-content/20 hover:scale-105 active:scale-95'}
+                                                    `}
                                                     title={isPast ? `${day.fullName} (${isCompleted ? 'Concluída e Travada' : 'Meta Perdida'})` : `${day.fullName} (${isCompleted ? 'Concluída' : 'Pendente'})`}
                                                 >
                                                     {day.label}
