@@ -81,6 +81,7 @@ const GoalsPage = () => {
     const [matterId, setMatterId] = useState('');
     const [quantity, setQuantity] = useState('');
     const [daysOfWeek, setDaysOfWeek] = useState([]);
+    const [goalType, setGoalType] = useState('questões');
 
     const [editingGoal, setEditingGoal] = useState(null);
     const [editQuantity, setEditQuantity] = useState('');
@@ -133,14 +134,14 @@ const GoalsPage = () => {
             const selectedMatter = matters.find(m => m._id === matterId);
             if (!selectedMatter) return toast.error("Selecione uma matéria válida.");
 
-            const finalTitle = `${selectedMatter.title.trim()} - questões`;
+            const finalTitle = `${selectedMatter.title.trim()} - ${goalType}`;
             const response = await axios.post(API_URL + "/goal/create-goal", {
                 title: finalTitle, quantity: Number(quantity), matter_id: matterId, daysOfWeek
             }, { withCredentials: true });
 
             if (response.data.success) {
                 toast.success("Meta criada!");
-                setMatterId(''); setQuantity(''); setDaysOfWeek([]);
+                setMatterId(''); setQuantity(''); setDaysOfWeek([]); setGoalType('questões');
                 document.getElementById('add_goal_modal').close();
                 fetchGoals();
             }
@@ -190,7 +191,6 @@ const GoalsPage = () => {
     }
 
     const handleDeleteGoal = async (goalId) => {
-        if (!window.confirm("Tem certeza que deseja excluir esta meta? Todo o histórico dela será perdido!")) return;
 
         try {
             const response = await axios.delete(API_URL + `/goal/delete-goal/${goalId}`, { withCredentials: true });
@@ -221,7 +221,7 @@ const GoalsPage = () => {
     return (
         <div className='flex flex-col gap-6'>
             <div className="flex justify-between items-center gap-2">
-                <span>◉ Metas de questões</span>
+                <span>◉ Metas (Questões / Leitura)</span>
                 <button className='btn  btn-sm' onClick={() => document.getElementById('add_goal_modal').showModal()}>
                     <Plus size={18} /> Nova Meta
                 </button>
@@ -270,7 +270,7 @@ const GoalsPage = () => {
                                         <h4 className="font-bold truncate text-[15px]" title={goal.title}>{goal.title}</h4>
                                         <div className="flex items-center gap-2">
                                             <span className="text-xs font-semibold text-primary bg-primary/10 p-1.5  rounded-lg">
-                                                {goal.quantity} questões / dia
+                                                {goal.quantity} {goal.title.endsWith('leitura') ? 'minutos' : 'questões'} / dia
                                             </span>
 
                                             <div className={`flex items-center gap-1 text-xs font-bold p-1 rounded-lg border ${currentStreak > 0 ? 'bg-orange-100 text-orange-600 border-orange-200' : 'bg-base-200 text-base-content/50 border-base-content/10'}`}>
@@ -344,6 +344,13 @@ const GoalsPage = () => {
                     <h3 className="font-bold text-lg mb-4">Adicionar Nova Meta</h3>
                     <form onSubmit={handleCreateGoal} className="flex flex-col gap-4">
                         <div className="form-control">
+                            <label className="label"><span className="label-text font-medium">Tipo de Meta</span></label>
+                            <select className="select select-bordered w-full" value={goalType} onChange={(e) => setGoalType(e.target.value)} required>
+                                <option value="questões">Questões</option>
+                                <option value="leitura">Leitura</option>
+                            </select>
+                        </div>
+                        <div className="form-control">
                             <label className="label"><span className="label-text font-medium">Selecione a Matéria</span></label>
                             <select className="select select-bordered w-full" value={matterId} onChange={(e) => setMatterId(e.target.value)} required>
                                 <option value="" disabled>Selecione uma matéria</option>
@@ -352,7 +359,7 @@ const GoalsPage = () => {
                             </select>
                         </div>
                         <div className="form-control">
-                            <label className="label"><span className="label-text font-medium">Questões por dia</span></label>
+                            <label className="label"><span className="label-text font-medium">{goalType === 'questões' ? 'Questões' : 'Minutos'} por dia</span></label>
                             <input type="number" min="1" placeholder="Ex: 50" className="input input-bordered w-full" value={quantity} onChange={(e) => setQuantity(e.target.value)} required />
                         </div>
 
