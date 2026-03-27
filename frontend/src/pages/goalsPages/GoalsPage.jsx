@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import { useMatterStore } from '../../store/matterStore';
 
 const WEEK_DAYS = [
-    { label: "Don", fullName: "Domingo", index: 0 },
+    { label: "Dom", fullName: "Domingo", index: 0 },
     { label: "Seg", fullName: "Segunda", index: 1 },
     { label: "Ter", fullName: "Terça", index: 2 },
     { label: "Qua", fullName: "Quarta", index: 3 },
