@@ -45,20 +45,20 @@ const calculateStreak = (goal, todayStr) => {
 
     let streak = 0;
     const [year, month, day] = todayStr.split('-').map(Number);
-    let currentDate = new Date(year, month - 1, day); 
+    let currentDate = new Date(year, month - 1, day);
 
     for (let i = 0; i < 365; i++) {
         const y = currentDate.getFullYear();
         const m = String(currentDate.getMonth() + 1).padStart(2, '0');
         const d = String(currentDate.getDate()).padStart(2, '0');
         const dateStr = `${y}-${m}-${d}`;
-        const dayOfWeek = currentDate.getDay(); 
+        const dayOfWeek = currentDate.getDay();
 
         if (goal.daysOfWeek.includes(dayOfWeek)) {
             if (goal.completedDates.includes(dateStr)) {
-                streak++; 
+                streak++;
             } else if (dateStr !== todayStr) {
-                break; 
+                break;
             }
         }
 
@@ -71,9 +71,9 @@ const GoalsPage = () => {
     const { matters, fetchMatters } = useMatterStore();
     const [goals, setGoals] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-    
+
     // Estado que controla o bloqueio global de 1 segundos
-    const [isToggling, setIsToggling] = useState(false); 
+    const [isToggling, setIsToggling] = useState(false);
 
     const weekDates = getDatesOfCurrentWeek();
     const todayStr = getTodayDateStr();
@@ -170,7 +170,7 @@ const GoalsPage = () => {
 
     const toggleDayCompletion = async (goalId, dateStr) => {
         //Se já estiver travado, ignora completamente o clique
-        if (isToggling) return; 
+        if (isToggling) return;
 
         //Aciona a trava para todas as bolinhas
         setIsToggling(true);
@@ -306,7 +306,9 @@ const GoalsPage = () => {
                                             const dateStr = weekDates[day.index];
                                             const isCompleted = goal.completedDates.includes(dateStr);
 
+                                            const isToday = dateStr === todayStr;
                                             const isPast = dateStr < todayStr;
+                                            const isFuture = dateStr > todayStr;
                                             const isMissed = isPast && !isCompleted;
 
                                             if (!isActive) {
@@ -321,16 +323,23 @@ const GoalsPage = () => {
                                                 <button
                                                     key={day.index}
                                                     onClick={() => toggleDayCompletion(goal._id, dateStr)}
-                                                    disabled={isPast || isToggling} // Bloqueia se o dia passou OU se o sistema está em cooldown de 2s
+                                                    disabled={!isToday || isToggling} //Só permite clicar se for EXATAMENTE HOJE
                                                     className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-all transform shadow-sm
-                                                        ${isToggling && !isPast ? 'opacity-70 ' : ''}
+                                                        ${isToggling && isToday ? 'opacity-70 ' : ''}
                                                         ${isCompleted ?
-                                                            `bg-success text-white shadow-success/30 ${isPast ? 'opacity-80 cursor-not-allowed' : isToggling ? 'cursor-not-allowed' : 'hover:scale-105 active:scale-95'}` :
+                                                            `bg-success text-white shadow-success/30 ${!isToday ? 'opacity-80 cursor-not-allowed' : isToggling ? 'cursor-not-allowed' : 'hover:scale-105 active:scale-95'}` :
                                                             isMissed ?
                                                                 'bg-error text-white shadow-error/30 opacity-80 cursor-not-allowed' :
-                                                                `bg-base-200 text-base-content border border-base-content/20 ${isToggling ? 'cursor-not-allowed' : 'hover:bg-base-300 hover:scale-105 active:scale-95'}`}
+                                                                isFuture ?
+                                                                    'bg-base-200 text-base-content border border-base-content/20 cursor-not-allowed' : // Visual do futuro
+                                                                    // Aqui só vai cair se for HOJE e não estiver completo
+                                                                    `bg-base-200 text-base-content border border-success ${isToggling ? 'cursor-not-allowed' : 'hover:bg-base-300 hover:scale-105 active:scale-95'}`}
                                                     `}
-                                                    title={isPast ? `${day.fullName} (${isCompleted ? 'Concluída e Travada' : 'Meta Perdida'})` : `${day.fullName} (${isCompleted ? 'Concluída' : 'Pendente'})`}
+                                                    title={
+                                                        isPast ? `${day.fullName} (${isCompleted ? 'Concluída e Travada' : 'Meta Perdida'})` :
+                                                            isFuture ? `${day.fullName} (Aguarde o dia chegar)` :
+                                                                `${day.fullName} (${isCompleted ? 'Concluída' : 'Pendente'})`
+                                                    }
                                                 >
                                                     {day.label}
                                                 </button>
@@ -348,7 +357,6 @@ const GoalsPage = () => {
                 )}
             </section>
 
-            {/* Modais omitidos para poupar espaço - Eles continuam 100% idênticos ao código que você me enviou */}
             <dialog id="add_goal_modal" className="modal">
                 <div className="modal-box">
                     <h3 className="font-bold text-lg mb-4">Adicionar Nova Meta</h3>
