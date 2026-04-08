@@ -21,7 +21,15 @@ export const createNote = async (req, res) => {
         res.status(201).json({ success: true, message: "Note created successfully", note });
 
     } catch (error) {
-        console.log("error in createNote ", error);
+        console.log("Erro no createNote: ", error);
+
+        //erro de validação do Mongoose (maxlength)
+        if (error.name === 'ValidationError') {
+            const message = Object.values(error.errors).map(val => val.message)[0];
+            return res.status(400).json({ success: false, message });
+        }
+
+        // Se for outro tipo de erro 
         res.status(500).json({ success: false, message: "Server error" });
     }
 }

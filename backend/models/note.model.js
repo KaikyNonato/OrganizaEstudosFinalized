@@ -8,7 +8,7 @@ const noteSchema = new mongoose.Schema({
     content: {
         type: String,
         required: true,
-        maxlength: [15000, 'O conteúdo da nota não pode exceder 15000 caracteres']
+        maxlength: [50000, 'O conteúdo da nota não pode exceder 50000 caracteres']
     },
     user_id: {
         type: mongoose.Schema.Types.ObjectId,
