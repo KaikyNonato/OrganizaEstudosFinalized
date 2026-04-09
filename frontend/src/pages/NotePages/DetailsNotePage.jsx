@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { API_URL } from '../../../API_URL'
 import { Link, useParams } from 'react-router-dom'
-import { Plus, Pencil, Trash, Search, Pin, Bold, Italic, Underline, List, ListOrdered, Palette, Undo2, AlignLeft, AlignCenter, AlignRight } from 'lucide-react'
+import { Plus, Pencil, Trash, Search, Pin, Bold, Italic, Underline, List, ListOrdered, Palette, Undo2, AlignLeft, AlignCenter, AlignRight, Loader } from 'lucide-react'
 
 const RichTextEditor = ({ value, onChange }) => {
     const editorRef = React.useRef(null);
@@ -176,7 +176,6 @@ const DetailsNotePage = () => {
         }
 
         setIsEditingNote(true)
-        const toastId = toast.loading("Atualizando nota...")
 
         try {
             const response = await axios.put(API_URL + `/note/update-note/${editingNoteId}`, {
@@ -186,13 +185,13 @@ const DetailsNotePage = () => {
             }, { withCredentials: true })
 
             if (response.data.success) {
-                toast.success("Nota atualizada com sucesso!", { id: toastId })
+                toast.success("Nota atualizada com sucesso!")
                 document.getElementById('edit_note_modal').close()
                 fetchNotes() // Recarrega a lista de notas com a edição aplicada
             }
         } catch (error) {
             console.log(error)
-            toast.error(error.response?.data?.message || "Erro ao atualizar nota", { id: toastId })
+            toast.error(error.response?.data?.message || "Erro ao atualizar nota")
         } finally {
             setIsEditingNote(false)
         }
@@ -249,9 +248,9 @@ const DetailsNotePage = () => {
     });
 
     return (
-        <div className=''>
+        <div className='flex flex-col gap-3 '>
             <div className='flex justify-center items-center'>
-                <Link className='  flex justify-center items-center gap-1 ' to={'/notas'}> <Undo2 size={15} /> Voltar</Link>
+                <Link className='  flex justify-center items-center gap-1 text-base-content/60 underline ' to={'/notas'}> <Undo2 size={15} /> Voltar</Link>
             </div>
             {notes && notes.length > 0 ? (
                 <div className=" flex flex-col gap-6">
@@ -259,7 +258,7 @@ const DetailsNotePage = () => {
                         <h2 className='font-medium'>◉ Suas Notas - {notes[0]?.matter_id?.title}</h2>
                         <div className="flex items-center gap-2 w-full sm:w-auto">
                             <div className="relative w-full sm:w-64">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/50" size={18} />
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 z-20 text-base-content/50" size={18} />
                                 <input
                                     type="text"
                                     placeholder="Pesquisar nota..."
@@ -319,7 +318,7 @@ const DetailsNotePage = () => {
             ) : (
                 <div className='flex justify-between items-center gap-2'>
                     <p className='font-medium'>◉ Esta materia não possui notas cadastradas!</p>
-                    <button className='btn btn-primary' onClick={() => document.getElementById('add_note_modal').showModal()}> <Plus></Plus> Adicionar Nota</button>
+                    <button className='btn ' onClick={() => document.getElementById('add_note_modal').showModal()}> <Plus></Plus> Adicionar Nota</button>
                 </div>
             )}
 
@@ -370,8 +369,8 @@ const DetailsNotePage = () => {
                         </div>
                         <div className="modal-action">
                             <button type="button" className="btn" onClick={() => document.getElementById('edit_note_modal').close()}>Cancelar</button>
-                            <button type="submit" className="btn btn-primary" disabled={isEditingNote}>
-                                {isEditingNote ? "Salvando..." : "Salvar Alterações"}
+                            <button type="submit" className="btn btn-primary w-40" disabled={isEditingNote}>
+                                {isEditingNote ? <Loader className='animate-spin' />: "Salvar Alterações"}
                             </button>
                         </div>
                     </form>
