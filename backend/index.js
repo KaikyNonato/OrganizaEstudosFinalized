@@ -21,7 +21,7 @@ app.set('trust proxy', 1)
 const PORT = process.env.PORT || 5000;
 const CLIENT_URL = process.env.CLIENT_URL || 'https://organizaestudos-net.onrender.com';
 
-app.use(cors({ origin: CLIENT_URL, credentials: true }));
+app.use(cors({ origin: 'https://organizaestudos-net.onrender.com', credentials: true }));
 
 app.use(express.json());
 app.use(cookieParser());
