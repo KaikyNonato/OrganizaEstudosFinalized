@@ -45,6 +45,7 @@ export const getSubjects = async (req, res) => {
     }
 }
 
+
 export const getAllSubjects = async (req, res) => {
     try {
         const matters = await Matter.find({ user_id: req.userId });
@@ -57,6 +58,7 @@ export const getAllSubjects = async (req, res) => {
         res.status(500).json({ success: false, message: "Server error" });
     }
 }
+
 
 export const updateSubject = async (req, res) => {
     const { id } = req.params;
@@ -106,6 +108,8 @@ export const updateSubject = async (req, res) => {
     }
 }
 
+
+
 export const reorderSubjects = async (req, res) => {
     try {
         const { updates } = req.body; // Array de { _id, order }
@@ -122,6 +126,7 @@ export const reorderSubjects = async (req, res) => {
         res.status(500).json({ success: false, message: "Erro ao reordenar" });
     }
 };
+
 
 export const deleteSubject = async (req, res) => {
     const { id } = req.params;
@@ -147,7 +152,6 @@ export const deleteSubject = async (req, res) => {
         res.status(500).json({ success: false, message: "Server error" });
     }
 }
-
 
 
 export const uploadAttachment = async (req, res) => {
@@ -186,6 +190,7 @@ export const uploadAttachment = async (req, res) => {
     }
 }
 
+
 export const removeAttachment = async (req, res) => {
     const { id } = req.params;
     const { public_id } = req.body; // Enviamos pelo body para evitar problemas com barras na URL
@@ -210,62 +215,63 @@ export const removeAttachment = async (req, res) => {
 
 
 export const concludedReview = async (req, res) => {
-    const { id } = req.params;
-    const { review } = req.params;
+    const { id, review } = req.params;
 
     try {
         const subject = await Subject.findById(id);
-
+        
         if (!subject) {
-            return res.status(404).json({ success: false, message: "Subject not found" });
+            return res.status(404).json({ success: false, message: "Assunto não encontrado." });
         }
 
-        if (review === "review1") {
-            subject.review1_concluded = true;
-        } else if (review === "review2") {
-            subject.review2_concluded = true;
-        } else if (review === "review3") {
-            subject.review3_concluded = true;
+        //Se a revisão clicada for a de 30 dias (review3)
+        if (review === "review3") {
+            const nextReviewDate = new Date();
+            nextReviewDate.setDate(nextReviewDate.getDate() + 30);
+            
+            subject.review3 = nextReviewDate;
+            subject.review3_concluded = false; 
+        } else {
+            subject[`${review}_concluded`] = true;
         }
 
         await subject.save();
-
-        res.status(200).json({ success: true, message: "Review concluída com sucesso" });
-
+        res.status(200).json({ success: true, subject });
     } catch (error) {
-        console.log("error in concludedReview ", error);
-        res.status(500).json({ success: false, message: "Server error" });
+        console.error("Erro interno em concludedReview:", error);
+        res.status(500).json({ success: false, message: "Erro interno ao concluir revisão." });
     }
-}
+};
 
 export const UndoCompletedReview = async (req, res) => {
-    const { id } = req.params;
-    const { review } = req.params;
+    const { id, review } = req.params;
 
     try {
         const subject = await Subject.findById(id);
 
         if (!subject) {
-            return res.status(400).json({ success: false, message: "Subject not found" });
+            return res.status(404).json({ success: false, message: "Assunto não encontrado." });
         }
 
-        if (review === "review1") {
-            subject.review1_concluded = false;
-        } else if (review === "review2") {
-            subject.review2_concluded = false;
-        } else if (review === "review3") {
+        if (review === "review3") {
+            // Volta 30 dias no tempo se ele quiser desfazer o pulo da review3
+            const prevReviewDate = new Date(subject.review3);
+            prevReviewDate.setDate(prevReviewDate.getDate() - 30);
+
+            subject.review3 = prevReviewDate;
             subject.review3_concluded = false;
+        } else {
+            // Desmarca a review1 ou review2
+            subject[`${review}_concluded`] = false;
         }
 
         await subject.save();
-
-        res.status(200).json({ success: true, message: "Review desmarcada com sucesso" });
-        
+        res.status(200).json({ success: true, subject });
     } catch (error) {
-        
+        console.error("Erro interno em undoReview:", error);
+        res.status(500).json({ success: false, message: "Erro ao desmarcar revisão" });
     }
 }
-
 
 
 export const streamPdf = async (req, res) => {
