@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import axios, { all } from 'axios'
-import { Clock, CircleCheck, FileText, Paperclip, Undo2, Loader } from 'lucide-react'
+import { Clock, CircleCheck, FileText, Paperclip, Undo2, Loader, Link as Link2 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { API_URL } from '../../../API_URL'
 import { useAuthStore } from '../../store/authStore'
@@ -103,7 +103,7 @@ const ReviewsPage = () => {
             }
         } catch (error) {
             console.error("Erro ao concluir revisão:", error)
-            toast.error("Erro ao concluir revisão")
+            toast.error(error.response?.data?.message);
         } finally {
             setConcluding(null)
         }
@@ -121,7 +121,7 @@ const ReviewsPage = () => {
 
         } catch (error) {
             console.error("Erro ao desmarcar revisão:", error)
-            toast.error("Erro ao desmarcar revisão")
+            toast.error(error.response?.data?.message);
         } finally {
             setUndoing(null);
         }
@@ -416,6 +416,13 @@ const ReviewsPage = () => {
                                     </div>
                                 ) : (
                                     <div>
+                                        {selectedSubject.link && (
+                                            <div className='mb-4 flex justify-start items-center gap-1 text-sm overflow-hidden'>
+                                                <span className="font-semibold text-sm flex items-center gap-2 min-w-3 shrink-0"><Link2 className='' size={16}></Link2> Link: </span>
+                                                <a className='link text-blue-500 truncate' href={`${selectedSubject.link}`} target="_blank" rel="noopener noreferrer">{selectedSubject.link}</a>
+                                            </div>
+                                        )}
+
                                         <div className='flex gap-1 text-sm '>
                                             <span className="font-semibold text-sm flex items-center gap-2 min-w-3"><Paperclip size={16}></Paperclip> Anexos</span>
                                             ({selectedSubject.attachments.length})
