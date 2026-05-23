@@ -103,7 +103,7 @@ const ReviewsPage = () => {
             }
         } catch (error) {
             console.error("Erro ao concluir revisão:", error)
-            toast.error(error.response?.data?.message);
+            toast.error("Erro ao concluir revisão!");
         } finally {
             setConcluding(null)
         }
@@ -121,7 +121,7 @@ const ReviewsPage = () => {
 
         } catch (error) {
             console.error("Erro ao desmarcar revisão:", error)
-            toast.error(error.response?.data?.message);
+            toast.error("Erro ao desmarcar revisão!");
         } finally {
             setUndoing(null);
         }
@@ -386,6 +386,13 @@ const ReviewsPage = () => {
                                     </div>
                                 </div>
 
+                                {selectedSubject.link && (
+                                    <div className='flex justify-start items-center gap-1 text-sm overflow-hidden'>
+                                        <span className="font-semibold text-sm flex items-center gap-2 min-w-3 shrink-0"><Link2 className='' size={16}></Link2> Link: </span>
+                                        <a className='link text-blue-500 truncate' href={`${selectedSubject.link}`} target="_blank" rel="noopener noreferrer">{selectedSubject.link}</a>
+                                    </div>
+                                )}
+
                                 {/* --- MUDANÇA DOS ANEXOS AQUI (USANDO O LINK) --- */}
                                 {selectedSubject.attachments && selectedSubject.attachments.length > 0 ? (
                                     <div className="flex flex-col gap-2">
@@ -416,13 +423,6 @@ const ReviewsPage = () => {
                                     </div>
                                 ) : (
                                     <div>
-                                        {selectedSubject.link && (
-                                            <div className='mb-4 flex justify-start items-center gap-1 text-sm overflow-hidden'>
-                                                <span className="font-semibold text-sm flex items-center gap-2 min-w-3 shrink-0"><Link2 className='' size={16}></Link2> Link: </span>
-                                                <a className='link text-blue-500 truncate' href={`${selectedSubject.link}`} target="_blank" rel="noopener noreferrer">{selectedSubject.link}</a>
-                                            </div>
-                                        )}
-
                                         <div className='flex gap-1 text-sm '>
                                             <span className="font-semibold text-sm flex items-center gap-2 min-w-3"><Paperclip size={16}></Paperclip> Anexos</span>
                                             ({selectedSubject.attachments.length})
