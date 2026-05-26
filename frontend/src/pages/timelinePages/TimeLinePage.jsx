@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
-import { Plus, Pencil, Trash, Calendar, BookOpen, FileText, Paperclip, CircleCheck, PlayCircle, CalendarDays } from 'lucide-react'
+import { Plus, Pencil, Trash, Calendar, BookOpen, FileText, Paperclip, CircleCheck, PlayCircle, CalendarDays, Link as Link2 } from 'lucide-react'
 import { API_URL } from '../../../API_URL'
 import { useAuthStore } from '../../store/authStore'
 import { useMatterStore } from '../../store/matterStore' // <-- Importando cache das matérias
@@ -465,6 +465,12 @@ const TimeLinePage = () => {
                                     </div>
                                 )}
 
+                                {selectedSubject.link && (
+                                    <div className='flex justify-start items-center gap-1 text-sm overflow-hidden'>
+                                        <span className="font-semibold text-sm flex items-center gap-2 min-w-3 shrink-0"><Link2 className='' size={16}></Link2> Link: </span>
+                                        <a className='link text-blue-500 truncate' href={`${selectedSubject.link}`} target="_blank" rel="noopener noreferrer">{selectedSubject.link}</a>
+                                    </div>
+                                )}
                                 {/* --- MUDANÇA DOS ANEXOS AQUI (USANDO O LINK) --- */}
                                 {selectedSubject.attachments && selectedSubject.attachments.length > 0 ? (
                                     <div className="flex flex-col gap-2">
