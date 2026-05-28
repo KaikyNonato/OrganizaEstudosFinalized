@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react'
-import { useAuthStore } from '../../store/authStore'
+import { useAuthStore } from '../store/authStore'
 import { BookOpenText, CircleCheck, Clock, ListTodo, TrendingUp, Plus, X, Link2, Calendar as CalendarIcon, RotateCcw } from 'lucide-react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
-import { API_URL } from '../../../API_URL'
+import { API_URL } from '../../API_URL'
 import { motion } from 'framer-motion'
 
 const daysOfWeek = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
