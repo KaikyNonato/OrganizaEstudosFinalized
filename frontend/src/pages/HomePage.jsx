@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react'
-import { useAuthStore } from '../store/authStore'
+import { useAuthStore } from '../../store/authStore'
 import { BookOpenText, CircleCheck, Clock, ListTodo, TrendingUp, Plus, X, Link2, Calendar as CalendarIcon, RotateCcw } from 'lucide-react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
-import { API_URL } from '../../API_URL'
+import { API_URL } from '../../../API_URL'
 import { motion } from 'framer-motion'
 
 const daysOfWeek = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
@@ -16,6 +16,7 @@ const HomePage = () => {
     const [todaysSchedule, setTodaysSchedule] = useState([])
     const [studiedTime, setStudiedTime] = useState(0)
     const [todaysReviews, setTodaysReviews] = useState([])
+    const [isLoading, setIsLoading] = useState(true)
 
     // ESTADOS PARA OS LINKS RÁPIDOS
     const [links, setLinks] = useState(user?.quickLinks || [])
@@ -32,6 +33,7 @@ const HomePage = () => {
         if (!isAuthenticated) return;
 
         const fetchData = async () => {
+            setIsLoading(true);
             try {
                 const [mattersResponse, subjectsResponse, timelineResponse, studyTimeResponse] = await Promise.all([
                     axios.get(API_URL + "/matter/get-matters", { withCredentials: true }),
@@ -92,6 +94,8 @@ const HomePage = () => {
                 }
             } catch (error) {
                 console.error("Erro ao buscar dados:", error)
+            } finally {
+                setIsLoading(false);
             }
         }
 
@@ -180,6 +184,77 @@ const HomePage = () => {
             </div>
         );
     };
+
+    if (isLoading) {
+        return (
+            <div className='flex flex-col gap-6'>
+                <div className='flex justify-between items-center gap-2'>
+                    <div className="skeleton h-6 w-48 sm:w-64"></div>
+                    <div className='hidden md:flex gap-3 items-center shrink-0'>
+                        {[1, 2, 3, 4].map(i => <div key={i} className="skeleton w-10 h-10 rounded-full"></div>)}
+                    </div>
+                    <div className='md:hidden shrink-0'>
+                        <div className="skeleton h-8 w-20 rounded-full"></div>
+                    </div>
+                </div>
+
+                <div className='flex flex-col gap-3'>
+                    <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4'>
+                        {[1, 2, 3, 4].map(i => (
+                            <div key={i} className='flex flex-col gap-3 border border-base-content/10 p-6 rounded-lg shadow-sm'>
+                                <div className='flex items-center justify-between'>
+                                    <div className="skeleton h-4 w-24"></div>
+                                    <div className="skeleton h-5 w-5 rounded-full"></div>
+                                </div>
+                                <div className="skeleton h-10 w-16"></div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className='grid grid-cols-1 lg:grid-cols-2 gap-3'>
+                        <div className='flex flex-col gap-3 border border-base-content/10 p-6 rounded-lg shadow-sm'>
+                            <div className='flex items-center justify-between'>
+                                <div className="skeleton h-6 w-32 sm:w-48"></div>
+                                <div className="skeleton h-6 w-6 rounded-full"></div>
+                            </div>
+                            <div className="skeleton h-3.5 w-full rounded-full"></div>
+                            <div className="skeleton h-4 w-40 sm:w-64 mt-1"></div>
+                        </div>
+                        <div className='flex flex-col gap-3 border border-base-content/10 p-6 rounded-lg shadow-sm'>
+                            <div className='flex items-center justify-between mb-1'>
+                                <div className="skeleton h-5 w-32"></div>
+                                <div className="skeleton h-5 w-16 rounded-full"></div>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                <div className="skeleton h-12 w-full rounded-lg"></div>
+                                <div className="skeleton h-12 w-full rounded-lg"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className='grid grid-cols-1 lg:grid-cols-4 gap-3'>
+                        <div className='flex flex-col gap-3 border border-base-content/10 p-6 rounded-lg shadow-sm lg:col-span-3'>
+                            <div className='flex items-center justify-between mb-1'>
+                                <div className="skeleton h-5 w-32 sm:w-40"></div>
+                                <div className="skeleton h-6 w-6 rounded-full"></div>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                <div className="skeleton h-10 w-full rounded-lg"></div>
+                                <div className="skeleton h-10 w-full rounded-lg"></div>
+                            </div>
+                        </div>
+                        <div className='flex flex-col gap-3 border border-base-content/10 p-6 rounded-lg shadow-sm lg:col-span-1'>
+                            <div className='flex items-center justify-between mb-4'>
+                                <div className="skeleton h-5 w-24"></div>
+                                <div className="skeleton h-6 w-6 rounded-full"></div>
+                            </div>
+                            <div className="skeleton h-48 w-full rounded-lg"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <motion.div
@@ -319,7 +394,7 @@ const HomePage = () => {
                                     <div key={sub._id} className='flex items-center justify-between bg-base-200/50 p-2 rounded-lg border border-base-content/5'>
                                         <div className='flex items-center gap-2'>
                                             <div className={`w-2 h-2 rounded-full`} style={{ backgroundColor: sub.matter_id?.color || '#ccc' }}></div>
-                                            <span className='font-medium text-sm truncate max-w-[150px] sm:max-w-[550px]'>{sub.title}</span>
+                                            <span className='font-medium text-sm truncate max-w-[150px] sm:max-w-[250px]'>{sub.title}</span>
                                         </div>
                                     </div>
                                 ))
