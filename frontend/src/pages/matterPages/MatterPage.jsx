@@ -31,12 +31,23 @@ const MatterPage = () => {
     const [title, setTitle] = useState('')
     const [selectedColor, setSelectedColor] = useState('#ff6467')
     const [isCreatingMatter, setIsCreatingMatter] = useState(false)
+    const [isLoading, setIsLoading] = useState(true)
 
     // --- 4. Efeitos ---
     useEffect(() => {
-        if (isAuthenticated) {
-            fetchMatters(false)
+        const loadData = async () => {
+            if (isAuthenticated) {
+                setIsLoading(true);
+                try {
+                    await fetchMatters(false);
+                } finally {
+                    setIsLoading(false);
+                }
+            } else {
+                setIsLoading(false);
+            }
         }
+        loadData();
     }, [isAuthenticated, fetchMatters])
 
     // --- 5. Handlers ---
@@ -103,16 +114,39 @@ const MatterPage = () => {
             </dialog>
 
             {/* LISTA DE MATÉRIAS */}
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-4 pb-4'>
-                {matters.length > 0 ? matters.map((matter) => (
-                    // Aqui estamos chamando o componente importado!
-                    <MatterItem key={matter._id} matter={matter} />
-                )) : (
-                    <div className="col-span-full text-center text-base-content/50 py-10 border border-dashed border-base-content/20 rounded-lg">
-                        Nenhuma matéria cadastrada no momento.
-                    </div>
-                )}
-            </div>
+            {isLoading ? (
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4 pb-4'>
+                    {[1, 2, 3, 4].map(i => (
+                        <div key={i} className="border border-base-content/10 p-4 sm:p-6 rounded-lg flex flex-col gap-4 shadow-sm bg-base-100">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3 w-full">
+                                    <div className="skeleton w-8 h-8 rounded-full shrink-0"></div>
+                                    <div className="skeleton h-6 w-32 sm:w-48"></div>
+                                </div>
+                                <div className="flex gap-2">
+                                    <div className="skeleton w-8 h-8 rounded-lg shrink-0"></div>
+                                    <div className="skeleton w-8 h-8 rounded-lg shrink-0"></div>
+                                </div>
+                            </div>
+                            <div className="flex flex-col gap-3 mt-2">
+                                <div className="skeleton h-12 w-full rounded-lg"></div>
+                                <div className="skeleton h-12 w-full rounded-lg"></div>
+                                <div className="skeleton h-8 w-full mt-2 rounded-lg"></div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4 pb-4'>
+                    {matters.length > 0 ? matters.map((matter) => (
+                        <MatterItem key={matter._id} matter={matter} />
+                    )) : (
+                        <div className="col-span-full text-center text-base-content/50 py-10 border border-dashed border-base-content/20 rounded-lg">
+                            Nenhuma matéria cadastrada no momento.
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     )
 }
