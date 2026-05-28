@@ -85,11 +85,22 @@ const ReviewsPage = () => {
     const { isAuthenticated } = useAuthStore()
 
     const [visibleConcludedCount, setVisibleConcludedCount] = useState(10)
+    const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
-        if (isAuthenticated) {
-            fetchAllSubjects(false)
+        const loadData = async () => {
+            if (isAuthenticated) {
+                setIsLoading(true);
+                try {
+                    await fetchAllSubjects(false);
+                } finally {
+                    setIsLoading(false);
+                }
+            } else {
+                setIsLoading(false);
+            }
         }
+        loadData();
     }, [isAuthenticated, fetchAllSubjects])
 
     const [concluding, setConcluding] = useState(null)
@@ -162,6 +173,37 @@ const ReviewsPage = () => {
             transition={{ duration: 0.3 }}
             className='flex flex-col gap-6'>
             <p className='font-medium'>◉ Revisões espaçadas de 24h, 7 e 30 dias</p>
+
+            {isLoading ? (
+                <div className='flex flex-col gap-6'>
+                    {[1, 2, 3, 4].map(block => (
+                        <div key={block} className='border border-base-content/10 p-6 rounded-lg flex flex-col gap-4 shadow-sm bg-base-100'>
+                            <div className='flex items-center gap-2'>
+                                <div className="skeleton w-5 h-5 rounded-full shrink-0"></div>
+                                <div className="skeleton h-6 w-32"></div>
+                            </div>
+                            <div className='flex flex-col gap-2'>
+                                {[1, 2].map(i => (
+                                    <div key={i} className="border border-base-content/5 rounded-lg p-2 flex justify-between items-center gap-2">
+                                        <div className="flex items-center gap-3 w-full">
+                                            <div className="skeleton w-4 h-4 rounded-full shrink-0"></div>
+                                            <div className="flex flex-col gap-2 w-full max-w-[150px] sm:max-w-[200px]">
+                                                <div className="skeleton h-4 w-full"></div>
+                                                <div className="skeleton h-3 w-3/4"></div>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2 items-center shrink-0">
+                                            <div className="skeleton h-5 w-16 rounded max-sm:hidden"></div>
+                                            <div className="skeleton h-4 w-20 sm:w-24"></div>
+                                            <div className="skeleton h-8 w-16 sm:w-20 rounded-lg"></div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : (
             <div className='flex flex-col gap-6'>
 
                 {/* --- 24 HORAS --- */}
@@ -338,6 +380,7 @@ const ReviewsPage = () => {
                     </div>
                 </div>
             </div>
+            )}
 
             {/* MODAL DE DETALHES */}
             <dialog id="subject_details_modal" className="modal">
