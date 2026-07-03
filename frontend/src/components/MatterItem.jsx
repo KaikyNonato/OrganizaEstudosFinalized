@@ -1,4 +1,3 @@
-// Arquivo: MatterItem.jsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -45,6 +44,8 @@ const MatterItem = ({ matter }) => {
     const [isDeletingSubject, setIsDeletingSubject] = useState(null);
     const [isSavingSubject, setIsSavingSubject] = useState(false);
     const [isDeletingMatter, setIsDeletingMatter] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState(null);
+    const [confirmationMessage, setConfirmationMessage] = useState("");
 
     useEffect(() => {
         fetchSubjects(matter._id, false);
@@ -76,6 +77,27 @@ const MatterItem = ({ matter }) => {
             setEditReviewDate('');
         }
         document.getElementById(`edit_subject_modal_${matter._id}`).showModal();
+    };
+
+    const handleConfirmDelete = () => {
+        if (!itemToDelete) return;
+
+        if (itemToDelete.type === 'subject') {
+            handleDeleteSubject(itemToDelete.data.subjectId);
+        } else if (itemToDelete.type === 'file') {
+            handleDeleteFile(itemToDelete.data.subjectId, itemToDelete.data.publicId);
+        } else if (itemToDelete.type === 'matter') {
+            handleDeleteMatter();
+        }
+
+        document.getElementById(`delete_confirm_modal_${matter._id}`).close();
+        setItemToDelete(null);
+    };
+
+    const openDeleteConfirmModal = (type, data, message) => {
+        setItemToDelete({ type, data });
+        setConfirmationMessage(message);
+        document.getElementById(`delete_confirm_modal_${matter._id}`).showModal();
     };
 
     // --- Lógicas de API ---
@@ -201,7 +223,7 @@ const MatterItem = ({ matter }) => {
                 fetchSubjects(matter._id, true);
             }
         } catch (error) {
-            toast.error("Erro ao atualizar status");
+            toast.error(error.response?.data?.message);
         }
     };
 
@@ -222,7 +244,6 @@ const MatterItem = ({ matter }) => {
 
     const handleDeleteMatter = async () => {
         setIsDeletingMatter(true);
-        await new Promise(resolve => setTimeout(resolve, 1000));
         try {
             const response = await axios.delete(API_URL + `/matter/delete-matter/${matter._id}`, { withCredentials: true });
             if (response.data.success) {
@@ -234,6 +255,18 @@ const MatterItem = ({ matter }) => {
         } finally {
             setIsDeletingMatter(false);
         }
+    };
+
+    const requestDeleteSubject = (subjectId) => {
+        openDeleteConfirmModal('subject', { subjectId }, "Tem certeza que deseja excluir este assunto? Todos os anexos serão perdidos.");
+    };
+
+    const requestDeleteFile = (subjectId, publicId) => {
+        openDeleteConfirmModal('file', { subjectId, publicId }, "Tem certeza que deseja excluir este anexo?");
+    };
+
+    const requestDeleteMatter = () => {
+        openDeleteConfirmModal('matter', {}, "Tem certeza que deseja excluir esta matéria? Todos os assuntos e anexos serão perdidos permanentemente.");
     };
 
     const handleMoveSubject = async (index, direction) => {
@@ -266,8 +299,8 @@ const MatterItem = ({ matter }) => {
                 matter={matter} 
                 isExpanded={isExpanded} 
                 setIsExpanded={setIsExpanded} 
-                openEditMatterModal={openEditMatterModal} 
-                handleDeleteMatter={handleDeleteMatter} 
+                openEditMatterModal={openEditMatterModal}
+                handleDeleteMatter={requestDeleteMatter}
                 isDeletingMatter={isDeletingMatter} 
             />
 
@@ -287,10 +320,9 @@ const MatterItem = ({ matter }) => {
                                         onUpdateStatus={handleUpdateStatus}
                                         onFileUpload={handleFileUpload}
                                         openEditModal={openEditModal}
-                                        openDetailsModal={openDetailsModal}
-                                        onDeleteSubject={handleDeleteSubject}
+                                        openDetailsModal={openDetailsModal}                                        onDeleteSubject={requestDeleteSubject}
                                         isDeletingSubject={isDeletingSubject}
-                                        onDeleteFile={handleDeleteFile}
+                                        onDeleteFile={requestDeleteFile}
                                         deletingFileId={deletingFileId}
                                     />
                                 ))
@@ -331,6 +363,8 @@ const MatterItem = ({ matter }) => {
                 setEditTitleMatter={setEditTitleMatter} editColorMatter={editColorMatter} 
                 setEditColorMatter={setEditColorMatter} isUpdatingSubject={isUpdatingSubject} 
                 handleUpdateMatter={handleUpdateMatter}
+                handleConfirmDelete={handleConfirmDelete}
+                confirmationMessage={confirmationMessage}
             />
         </motion.div>
     );
