@@ -1,13 +1,13 @@
 import React from 'react';
-import { CircleX, CircleCheck, LinkIcon, Paperclip, FileText, Loader } from 'lucide-react';
+import { CircleX, CircleCheck, LinkIcon, Paperclip, FileText, Loader, ShieldAlert } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const MatterModals = ({
     matter, colors, viewingSubject, editingSubject,
     editTitle, setEditTitle, editLink, setEditLink,
     editReviewDate, setEditReviewDate, isSavingSubject, handleUpdateSubject,
-    editTitleMatter, setEditTitleMatter, editColorMatter, setEditColorMatter,
-    isUpdatingSubject, handleUpdateMatter
+    editTitleMatter, setEditTitleMatter, editColorMatter, setEditColorMatter, isUpdatingSubject, handleUpdateMatter,
+    handleConfirmDelete, confirmationMessage
 }) => {
     return (
         <>
@@ -193,6 +193,28 @@ const MatterModals = ({
                         </div>
                     </form>
                 </div>
+            </dialog>
+
+            {/* MODAL: CONFIRMAR EXCLUSÃO */}
+            <dialog id={`delete_confirm_modal_${matter._id}`} className="modal modal-bottom sm:modal-middle">
+                <div className="modal-box">
+                    <h3 className="font-bold text-lg flex items-center gap-2 text-error">
+                        <ShieldAlert size={24} />
+                        Confirmar Exclusão
+                    </h3>
+                    <p className="py-4">{confirmationMessage}</p>
+                    <div className="modal-action">
+                        <form method="dialog">
+                            <button className="btn btn-ghost">Cancelar</button>
+                        </form>
+                        <button className="btn btn-error" onClick={handleConfirmDelete}>
+                            Sim, Excluir
+                        </button>
+                    </div>
+                </div>
+                <form method="dialog" className="modal-backdrop">
+                    <button>close</button>
+                </form>
             </dialog>
         </>
     );
