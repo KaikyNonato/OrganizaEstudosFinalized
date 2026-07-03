@@ -3,12 +3,12 @@ import { ArrowUp, ArrowDown, CircleX, CircleCheck, LinkIcon, Paperclip, PencilLi
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 
-const SubjectItem = ({ 
-    subject, matter, index, totalSubjects, 
-    onMove, onUpdateStatus, onFileUpload, 
-    openEditModal, openDetailsModal, 
-    onDeleteSubject, isDeletingSubject, 
-    onDeleteFile, deletingFileId 
+const SubjectItem = ({
+    subject, matter, index, totalSubjects,
+    onMove, onUpdateStatus, onFileUpload,
+    openEditModal, openDetailsModal,
+    onDeleteSubject, isDeletingSubject,
+    onDeleteFile, deletingFileId
 }) => {
     const [isAttachmentsExpanded, setIsAttachmentsExpanded] = useState(false);
 
@@ -35,14 +35,21 @@ const SubjectItem = ({
                         </div>
                         {subject.status === 'PENDENTE' ? <CircleX className='text-red-400 max-sm:min-w-5 min-w-5' size={15} /> : <CircleCheck className='text-green-400 max-sm:min-w-5 min-w-5' size={15} />}
                         <span className='font-semibold truncate lg:max-w-100' title={subject.title}>
-                            {subject.title}
+                            {subject.title} 
                         </span>
                     </div>
 
                     <div className='flex items-center gap-2 '>
-                        <select className="select select-xs select-bordered mr-1 hover:cursor-pointer max-lg:w-16 lg:w-27" value={subject.status} onChange={(e) => { e.stopPropagation(); onUpdateStatus(subject._id, e.target.value); }}>
-                            <option value="PENDENTE">PENDENTE</option>
-                            <option value="CONCLUIDO">CONCLUIDO</option>
+                        {/* --- Seletor para DESKTOP (some em telas pequenas) --- */}
+                        <select className="select select-bordered hover:cursor-pointer w-28 hidden xl:block h-6 min-h-6 text-xs leading-6" value={subject.status} onChange={(e) => { e.stopPropagation(); onUpdateStatus(subject._id, e.target.value); }}>
+                            <option value="PENDENTE" >PENDENTE</option>
+                            <option value="CONCLUIDO" >CONCLUÍDO</option>
+                        </select>
+
+                        {/* --- Seletor para MOBILE (aparece apenas em telas pequenas) --- */}
+                        <select className="select select-bordered hover:cursor-pointer w-17 truncate xl:hidden h-6 min-h-6 text-xs leading-6" value={subject.status} onChange={(e) => { e.stopPropagation(); onUpdateStatus(subject._id, e.target.value); }}>
+                            <option value="PENDENTE">PEN</option>
+                            <option value="CONCLUIDO">CON</option>
                         </select>
 
                         {subject.link && (
